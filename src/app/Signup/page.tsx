@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useAuth } from "@/app/context/AuthContext"; // adjust the import path as needed
+import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
 
 export default function Signup() {

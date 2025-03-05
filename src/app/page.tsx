@@ -1,9 +1,8 @@
-// app/page.tsx
 "use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/app/context/AuthContext"; // Adjust path as needed
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function Home() {
   const { user, logout } = useAuth();
@@ -21,7 +20,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    <div className="flex min-h-screen items-center justify-center">
       {user ? (
         <>
           <h1 className="text-4xl font-bold text-blue-600">
