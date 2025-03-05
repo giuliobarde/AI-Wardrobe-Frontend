@@ -14,6 +14,7 @@ export interface UserData {
 export interface AuthContextType {
   user: UserData | null;
   login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -34,9 +35,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         password,
       });
 
-      // Build the user object, setting email from the form input
+      // Build the user object using the email from input (backend doesn't return email)
       const userData: UserData = {
-        email, // from the form input
+        email, // Set from the form input
         user_id: response.data.user_id,
         access_token: response.data.access_token,
         message: response.data.message,
@@ -48,7 +49,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(userData);
       router.push("/");
     } catch (error: any) {
-      console.error("Login failed:", error.response?.data || error.message);
+      // Log the complete error to inspect its structure
+      console.error(
+        "Login failed:",
+        error.response ? error.response.data : error.message
+      );
+    }
+  };
+
+  const signup = async (email: string, password: string) => {
+    try {
+      const response = await axios.post("http://localhost:8000/sign-up/", {
+        email,
+        password,
+      });
+      // Optionally, automatically log in the user after sign-up
+      await login(email, password);
+    } catch (error: any) {
+      console.error(
+        "Sign-up failed:",
+        error.response ? error.response.data : error.message
+      );
     }
   };
 
@@ -60,7 +81,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
