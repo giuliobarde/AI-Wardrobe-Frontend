@@ -1,6 +1,6 @@
 import NavBar from "@/app/components/NavBar";
 import "./globals.css";
-import { AuthProvider } from "@/app/context/AuthContext"; // adjust the path as needed
+import { AuthProvider } from "@/app/context/AuthContext";
 
 export const metadata = {
   title: "AI Wardrobe",

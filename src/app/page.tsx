@@ -26,13 +26,6 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-blue-600">
             Welcome, {user.email}!
           </h1>
-          <button
-            type="submit"
-            className="p-2 bg-blue-500 text-white rounded"
-            onClick={handleSubmit}
-          >
-            Log out
-          </button>
         </>
       ) : (
         <p className="text-lg">Redirecting to Login...</p>
