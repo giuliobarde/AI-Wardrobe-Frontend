@@ -20,7 +20,7 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold">Login</h1>
           <input
-            type="email"
+            type="string"
             placeholder="Email"
             className="p-2 border rounded"
             value={email}
