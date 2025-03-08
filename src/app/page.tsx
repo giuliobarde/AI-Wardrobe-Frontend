@@ -19,13 +19,13 @@ export default function Home() {
         </p>
         <div className="flex space-x-4">
           <Link
-            href="/login"
+            href="/Login"
             className="px-6 py-3 bg-blue-600 text-white rounded-full font-medium shadow hover:bg-blue-700 transition"
           >
             Get Started
           </Link>
           <Link
-            href="/explore"
+            href="/Explore"
             className="px-6 py-3 border border-blue-600 text-blue-600 rounded-full font-medium hover:bg-blue-50 transition"
           >
             Explore

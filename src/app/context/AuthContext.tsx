@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, ReactNode, useState, useContext } from "react";
+import React, { createContext, ReactNode, useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
@@ -94,6 +94,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.removeItem("token");
         router.push("/login");
     };
+
+    // TEMPORARY AUTO-LOGIN EFFECT: Automatically log in with hard-coded credentials on refresh
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token && !user) {
+          // Optionally, call your /session/ endpoint to verify the token
+          // and set the user. For now, you might just hard-code the user details.
+          // This is temporary and should be replaced with a proper auto-login flow.
+          login("soccerstar17@gmail.com", "megmeg");
+        }
+      }, []);
 
     return (
         <AuthContext.Provider value={{ user, login, signup, logout }}>
