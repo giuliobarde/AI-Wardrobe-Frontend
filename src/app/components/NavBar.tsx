@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { User, Menu, LogOut, Settings } from "lucide-react"; // Importing icons
+import { User, Menu, LogOut, Settings } from "lucide-react";
 
 export default function Navbar() {
     const { user, logout } = useAuth();
@@ -42,7 +42,7 @@ export default function Navbar() {
     };
 
     return (
-        <nav className="bg-white w-full flex justify-between items-center px-6 h-16 shadow-md">
+        <nav className="bg-slate-50 fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 h-16 shadow-md">
             {/* Logo & App Name */}
             <div className="flex items-center space-x-2">
                 <svg className="w-8 h-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
@@ -78,10 +78,10 @@ export default function Navbar() {
                         {/* Dropdown Menu */}
                         {dropdownOpen && (
                             <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                                <Link href="/profile" className="flex items-center px-4 py-2 hover:bg-gray-100">
+                                <Link href="/Profile" className="flex items-center px-4 py-2 hover:bg-gray-100">
                                     <User className="w-4 h-4 mr-2" /> Profile
                                 </Link>
-                                <Link href="/settings" className="flex items-center px-4 py-2 hover:bg-gray-100">
+                                <Link href="/Settings" className="flex items-center px-4 py-2 hover:bg-gray-100">
                                     <Settings className="w-4 h-4 mr-2" /> Settings
                                 </Link>
                                 <button 

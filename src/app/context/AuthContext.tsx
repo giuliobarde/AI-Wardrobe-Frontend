@@ -40,6 +40,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             const response = await axios.post("http://localhost:8000/sign-in/", {
                 identifier: email,
                 password,
+            },
+            {
+              headers: { "Content-Type": "application/json" },
             });
         
             // Build the user object (backend returns user_id, access_token, message)
@@ -53,7 +56,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             axios.defaults.headers.common["Authorization"] = `Bearer ${userData.access_token}`;
             localStorage.setItem("token", userData.access_token);
             setUser(userData);
-            router.push("/");
+            router.push("/Wardrobe");
         } catch (error: any) {
             console.error("Login failed:", error.response ? error.response.data : error.message);
         }

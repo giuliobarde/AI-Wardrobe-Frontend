@@ -15,7 +15,7 @@ export default function Login() {
   };
 
   return (
-    <div className="py-20">
+    <div className="py-30">
       <div className="max-w-md mx-auto p-4 border rounded shadow">
         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold">Login</h1>
