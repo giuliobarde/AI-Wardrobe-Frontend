@@ -1,20 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import { addClothingItem } from "../services/wardrobeService";
+import ItemModal from "../components/AddItemModal";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 
 export default function Wardrobe() {
-  const [itemType, setItemType] = useState("");
-  const [material, setMaterial] = useState("");
-  const [color, setColor] = useState("");
-  const [formality, setFormality] = useState("");
-  const [pattern, setPattern] = useState("");
-  const [fit, setFit] = useState("");
-  const [suitableWeather, setSuitableWeather] = useState("");
-  const [suitableOccasion, setSuitableOccasion] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -24,125 +20,72 @@ export default function Wardrobe() {
     }
   }, [user, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // <-- Make sure to call preventDefault()
-    setError(null);
-
-    if (!user?.access_token) {
-      setError("User authentication failed. Please log in again.");
-      return;
+  // Close modal when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setModalOpen(false);
+      }
     }
 
-    // Build an item payload that includes the current user's ID.
-    const itemData = {
-      user_id: user.user_id,  // Ensure you send the user ID
-      item_type: itemType,
-      material,
-      color,
-      formality,
-      pattern,
-      fit,
-      suitable_for_weather: suitableWeather,
-      suitable_for_occasion: suitableOccasion,
-    };
-
-    try {
-      await addClothingItem(itemData, user.access_token);
-      // Reset form fields after successful submission
-      setItemType("");
-      setMaterial("");
-      setColor("");
-      setFormality("");
-      setPattern("");
-      setFit("");
-      setSuitableWeather("");
-      setSuitableOccasion("");
-    } catch (err) {
-      setError("Failed to add item");
-      console.error(err);
+    if (modalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
     }
-  };
+
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [modalOpen]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      {user ? (
-        <div className="py-30">
-          <div className="max-w-md mx-auto p-4 border rounded shadow">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-              <h1 className="text-2xl font-bold">Add Item</h1>
-              <input
-                type="text"
-                placeholder="Item Type"
-                className="p-2 border rounded"
-                value={itemType}
-                onChange={(e) => setItemType(e.target.value)}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Material"
-                className="p-2 border rounded"
-                value={material}
-                onChange={(e) => setMaterial(e.target.value)}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Color"
-                className="p-2 border rounded"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Formality"
-                className="p-2 border rounded"
-                value={formality}
-                onChange={(e) => setFormality(e.target.value)}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Pattern"
-                className="p-2 border rounded"
-                value={pattern}
-                onChange={(e) => setPattern(e.target.value)}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Fit"
-                className="p-2 border rounded"
-                value={fit}
-                onChange={(e) => setFit(e.target.value)}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Suitable for Weather"
-                className="p-2 border rounded"
-                value={suitableWeather}
-                onChange={(e) => setSuitableWeather(e.target.value)}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Suitable for Occasion"
-                className="p-2 border rounded"
-                value={suitableOccasion}
-                onChange={(e) => setSuitableOccasion(e.target.value)}
-                required
-              />
-              {error && <p className="text-red-500">{error}</p>}
-              <button type="submit" className="p-2 bg-blue-500 text-white rounded">
-                Add item
-              </button>
-            </form>
+    <div className="py-20 px-4">
+      {/* Tops Section */}
+      <div className="mb-8">
+        <h1 className="text-lg font-bold mb-2">Tops</h1>
+        <div className="flex space-x-4 overflow-x-auto">
+          {/* Add Item Card */}
+          <div
+            onClick={() => setModalOpen(true)}
+            className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
+          >
+            <Plus className="w-8 h-8 text-blue-600" />
           </div>
         </div>
-      ) : (
-        <p className="text-lg">Redirecting to Login...</p>
+      </div>
+
+      {/* Bottoms Section */}
+      <div className="mb-8">
+        <h1 className="text-lg font-bold mb-2">Bottoms</h1>
+        <div className="flex space-x-4 overflow-x-auto">
+          {/* Add Item Card */}
+          <div
+            onClick={() => setModalOpen(true)}
+            className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
+          >
+            <Plus className="w-8 h-8 text-blue-600" />
+          </div>
+        </div>
+      </div>
+
+      {/* Shoes Section */}
+      <div className="mb-8">
+        <h1 className="text-lg font-bold mb-2">Shoes</h1>
+        <div className="flex space-x-4 overflow-x-auto">
+          {/* Add Item Card */}
+          <div
+            onClick={() => setModalOpen(true)}
+            className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
+          >
+            <Plus className="w-8 h-8 text-blue-600" />
+          </div>
+        </div>
+      </div>
+
+      {/* Render the Modal */}
+      {modalOpen && (
+        <div ref={modalRef}>
+          <ItemModal modalOpen={modalOpen} setModalOpen={setModalOpen} />
+        </div>
       )}
     </div>
   );
