@@ -41,7 +41,7 @@ export default function Wardrobe() {
     <div className="py-20 px-4">
       {/* Tops Section */}
       <div className="mb-8">
-        <h1 className="text-lg font-bold mb-2">Tops</h1>
+        <Link href="/Tops" className="text-lg font-bold mb-2 hover:cursor-pointer">Tops</Link>
         <div className="flex space-x-4 overflow-x-auto">
           {/* Add Item Card */}
           <div
@@ -55,7 +55,7 @@ export default function Wardrobe() {
 
       {/* Bottoms Section */}
       <div className="mb-8">
-        <h1 className="text-lg font-bold mb-2">Bottoms</h1>
+        <Link href="/Bottoms" className="text-lg font-bold mb-2 hover:cursor-pointer">Bottoms</Link>
         <div className="flex space-x-4 overflow-x-auto">
           {/* Add Item Card */}
           <div
@@ -69,7 +69,21 @@ export default function Wardrobe() {
 
       {/* Shoes Section */}
       <div className="mb-8">
-        <h1 className="text-lg font-bold mb-2">Shoes</h1>
+        <Link href="/Shoes" className="text-lg font-bold mb-2 hover:cursor-pointer">Shoes</Link>
+        <div className="flex space-x-4 overflow-x-auto">
+          {/* Add Item Card */}
+          <div
+            onClick={() => setModalOpen(true)}
+            className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
+          >
+            <Plus className="w-8 h-8 text-blue-600" />
+          </div>
+        </div>
+      </div>
+
+      {/* Outerware Section */}
+      <div className="mb-8">
+        <Link href="/Outerware" className="text-lg font-bold mb-2 hover:cursor-pointer">Outerware</Link>
         <div className="flex space-x-4 overflow-x-auto">
           {/* Add Item Card */}
           <div
