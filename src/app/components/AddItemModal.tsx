@@ -19,6 +19,7 @@ export default function AddItemModal({ modalOpen, setModalOpen }: ItemModalProps
     const [fit, setFit] = useState("");
     const [suitableWeather, setSuitableWeather] = useState("");
     const [suitableOccasion, setSuitableOccasion] = useState("");
+    const [subType, setSubType] = useState("");
     const [error, setError] = useState<string | null>(null);
     const { user } = useAuth();
 
@@ -27,36 +28,39 @@ export default function AddItemModal({ modalOpen, setModalOpen }: ItemModalProps
         setError(null);
 
         if (!user?.access_token) {
-            setError("User authentication failed. Please log in again.");
-            return;
+        setError("User authentication failed. Please log in again.");
+        return;
         }
 
         const itemData = {
-            user_id: user.user_id,
-            item_type: itemType,
-            material,
-            color,
-            formality,
-            pattern,
-            fit,
-            suitable_for_weather: suitableWeather,
-            suitable_for_occasion: suitableOccasion,
+        user_id: user.user_id,
+        item_type: itemType,
+        material,
+        color,
+        formality,
+        pattern,
+        fit,
+        suitable_for_weather: suitableWeather,
+        suitable_for_occasion: suitableOccasion,
+        sub_type: subType, // Changed key to sub_type
         };
 
         try {
-            await addClothingItem(itemData, user.access_token);
-            setItemType("");
-            setMaterial("");
-            setColor("");
-            setFormality("");
-            setPattern("");
-            setFit("");
-            setSuitableWeather("");
-            setSuitableOccasion("");
-            setModalOpen(false);
+        await addClothingItem(itemData, user.access_token);
+        // Reset form fields after successful submission
+        setItemType("");
+        setMaterial("");
+        setColor("");
+        setFormality("");
+        setPattern("");
+        setFit("");
+        setSuitableWeather("");
+        setSuitableOccasion("");
+        setSubType("");
+        setModalOpen(false);
         } catch (err) {
-            setError("Failed to add item");
-            console.error(err);
+        setError("Failed to add item");
+        console.error(err);
         }
     };
 
@@ -65,19 +69,18 @@ export default function AddItemModal({ modalOpen, setModalOpen }: ItemModalProps
     return (
         <div
             className="fixed inset-0 flex items-center justify-center bg-black z-50"
-            style={{ backgroundColor: "rgba(17, 24, 39, 0.5)" }} // temporary till bg-opacity fix
+            style={{ backgroundColor: "rgba(17, 24, 39, 0.5)" }}
             onClick={() => setModalOpen(false)}
         >
             <div
                 className="relative bg-white p-6 rounded shadow-lg max-w-md w-full"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Close Button */}
                 <button
                     onClick={() => setModalOpen(false)}
                     className="absolute top-2 right-2 p-1 rounded hover:bg-gray-200"
                 >
-                <X className="w-5 h-5 text-gray-600" />
+                    <X className="w-5 h-5 text-gray-600" />
                 </button>
                 <h1 className="text-2xl font-bold mb-4">Add Item</h1>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-2">
@@ -86,7 +89,10 @@ export default function AddItemModal({ modalOpen, setModalOpen }: ItemModalProps
                         placeholder="Item Type"
                         className="p-2 border rounded"
                         value={itemType}
-                        onChange={(e) => setItemType(e.target.value)}
+                        onChange={(e) => {
+                        setItemType(e.target.value);
+                        setSubType(e.target.value);  // Update subType when itemType changes
+                        }}
                         required
                     />
                     <input

@@ -15,6 +15,7 @@ interface Item {
   fit: string;
   suitable_for_weather: string;
   suitable_for_occasion: string;
+  sub_type: string;
 }
 
 interface ItemCardProps {

@@ -7,10 +7,8 @@ import AddItemModal from "../components/AddItemModal";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import ItemCard from "../components/ItemCard";
-import { displayClothingItem } from "../services/wardrobeService";
 
 export default function Wardrobe() {
-  const [items, setItems] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -53,7 +51,7 @@ export default function Wardrobe() {
           >
             <Plus className="w-8 h-8 text-blue-600" />
           </div>
-          <ItemCard itemType="test2"/>
+          <ItemCard itemType="top"/>
         </div>
       </div>
 
