@@ -49,7 +49,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType }) => {
   }, [user, itemType]);
 
   if (error) return <p className="text-red-500">{error}</p>;
-  if (items.length === 0) return <p>No items found for {itemType}.</p>;
+  //if (items.length === 0) return <p>No items found for {itemType}.</p>;
 
   return (
     <div className="flex flex-wrap gap-4 justify-center">
@@ -58,7 +58,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType }) => {
           key={item.id}
           className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
         >
-          <h1 className="text-2xl font-bold">{item.item_type}</h1>
+          <h1 className="text-2xl font-bold">{item.material + "\n" + item.sub_type}</h1>
         </div>
       ))}
     </div>

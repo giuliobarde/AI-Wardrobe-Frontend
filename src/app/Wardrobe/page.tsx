@@ -51,7 +51,7 @@ export default function Wardrobe() {
           >
             <Plus className="w-8 h-8 text-blue-600" />
           </div>
-          <ItemCard itemType="top"/>
+          <ItemCard itemType="tops"/>
         </div>
       </div>
 
@@ -66,6 +66,7 @@ export default function Wardrobe() {
           >
             <Plus className="w-8 h-8 text-blue-600" />
           </div>
+          <ItemCard itemType="bottoms"/>
         </div>
       </div>
 
@@ -80,6 +81,7 @@ export default function Wardrobe() {
           >
             <Plus className="w-8 h-8 text-blue-600" />
           </div>
+          <ItemCard itemType="shoes"/>
         </div>
       </div>
 
@@ -94,6 +96,7 @@ export default function Wardrobe() {
           >
             <Plus className="w-8 h-8 text-blue-600" />
           </div>
+          <ItemCard itemType="outerware"/>
         </div>
       </div>
 
