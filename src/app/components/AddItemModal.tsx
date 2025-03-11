@@ -225,13 +225,6 @@ export default function AddItemModal({ modalOpen, setModalOpen }: ItemModalProps
                         value={fit}
                         onChange={(e) => setFit(e.target.value)}
                     />
-                    <input
-                        type="text"
-                        placeholder="Suitable for Occasion"
-                        className="p-2 border rounded"
-                        value={suitableOccasion}
-                        onChange={(e) => setSuitableOccasion(e.target.value)}
-                    />
                     {error && <p className="text-red-500">{error}</p>}
                     <button type="submit" className="p-2 bg-blue-500 text-white rounded">
                         Add item
