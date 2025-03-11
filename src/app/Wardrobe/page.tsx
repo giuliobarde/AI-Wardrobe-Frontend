@@ -3,11 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import ItemModal from "../components/AddItemModal";
+import AddItemModal from "../components/AddItemModal";
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import ItemCard from "../components/ItemCard";
+import { displayClothingItem } from "../services/wardrobeService";
 
 export default function Wardrobe() {
+  const [items, setItems] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -50,6 +53,7 @@ export default function Wardrobe() {
           >
             <Plus className="w-8 h-8 text-blue-600" />
           </div>
+          <ItemCard itemType="test2"/>
         </div>
       </div>
 
@@ -98,7 +102,7 @@ export default function Wardrobe() {
       {/* Render the Modal */}
       {modalOpen && (
         <div ref={modalRef}>
-          <ItemModal modalOpen={modalOpen} setModalOpen={setModalOpen} />
+          <AddItemModal modalOpen={modalOpen} setModalOpen={setModalOpen} />
         </div>
       )}
     </div>

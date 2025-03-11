@@ -20,3 +20,24 @@ export const addClothingItem = async (item: any, token: string) => {
         throw error;
     }
 };
+
+export const displayClothingItem = async (token: string, itemType: string) => {
+    try {
+        const response = await axios.get(
+            `${API_BASE_URL}/clothing_items/?item_type=${encodeURIComponent(itemType)}`,
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        return response.data;
+    } catch (error: any) {
+        console.error(
+          "Failed to display clothing items:",
+          error.response ? error.response.data : error.message
+        );
+        throw error;
+    }
+};

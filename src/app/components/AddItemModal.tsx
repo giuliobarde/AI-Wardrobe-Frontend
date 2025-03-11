@@ -10,7 +10,7 @@ type ItemModalProps = {
     setModalOpen: (open: boolean) => void;
 };
 
-export default function ItemModal({ modalOpen, setModalOpen }: ItemModalProps) {
+export default function AddItemModal({ modalOpen, setModalOpen }: ItemModalProps) {
     const [itemType, setItemType] = useState("");
     const [material, setMaterial] = useState("");
     const [color, setColor] = useState("");
