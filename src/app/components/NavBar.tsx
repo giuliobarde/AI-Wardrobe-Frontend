@@ -51,50 +51,37 @@ export default function Navbar() {
                 <span className="text-lg font-bold text-blue-600">StyleSync</span>
             </div>
 
-            {/* Search Bar (visible on medium screens and up) */}
-            {visible && (
-                <>
-                    <div className="hidden md:block flex-grow mx-4">
-                        <input
-                            type="text"
-                            placeholder="Start your search"
-                            className="w-full p-2 border border-gray-300 rounded-full focus:outline-none"
-                        />
+            {/* Navigation with Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+                {/* Dropdown Toggle Button */}
+                <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center space-x-3 px-3 py-1 border border-gray-300 rounded-full shadow-sm hover:bg-gray-100 focus:outline-none"
+                >
+                    <Menu className="w-5 h-5" />
+                    <div className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300">
+                        <User className="w-5 h-5 text-gray-700" />
                     </div>
+                </button>
 
-                    {/* Navigation with Dropdown */}
-                    <div className="relative" ref={dropdownRef}>
-                        {/* Dropdown Toggle Button */}
-                        <button
-                            onClick={() => setDropdownOpen(!dropdownOpen)}
-                            className="flex items-center space-x-3 px-3 py-1 border border-gray-300 rounded-full shadow-sm hover:bg-gray-100 focus:outline-none"
+                {/* Dropdown Menu */}
+                {dropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                        <Link href="/Profile" className="flex items-center px-4 py-2 hover:bg-gray-100">
+                            <User className="w-4 h-4 mr-2" /> Profile
+                        </Link>
+                        <Link href="/Settings" className="flex items-center px-4 py-2 hover:bg-gray-100">
+                            <Settings className="w-4 h-4 mr-2" /> Settings
+                        </Link>
+                        <button 
+                            className="w-full flex items-center px-4 py-2 text-red-600 hover:bg-red-100"
+                            onClick={handleSubmit}
                         >
-                            <Menu className="w-5 h-5" />
-                            <div className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300">
-                                <User className="w-5 h-5 text-gray-700" />
-                            </div>
+                            <LogOut className="w-4 h-4 mr-2" /> Logout
                         </button>
-
-                        {/* Dropdown Menu */}
-                        {dropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                                <Link href="/Profile" className="flex items-center px-4 py-2 hover:bg-gray-100">
-                                    <User className="w-4 h-4 mr-2" /> Profile
-                                </Link>
-                                <Link href="/Settings" className="flex items-center px-4 py-2 hover:bg-gray-100">
-                                    <Settings className="w-4 h-4 mr-2" /> Settings
-                                </Link>
-                                <button 
-                                    className="w-full flex items-center px-4 py-2 text-red-600 hover:bg-red-100"
-                                    onClick={handleSubmit}
-                                >
-                                    <LogOut className="w-4 h-4 mr-2" /> Logout
-                                </button>
-                            </div>
-                        )}
                     </div>
-                </>
-            )}
+                )}
+            </div>
         </nav>
     );
 }

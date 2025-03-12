@@ -23,15 +23,15 @@ export default function Wardrobe() {
     // Close modal when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-                setModalOpen(false);
-            }
+        if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+            setModalOpen(false);
+        }
         }
 
         if (modalOpen) {
-            document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("mousedown", handleClickOutside);
         } else {
-            document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
         }
 
         return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -39,20 +39,18 @@ export default function Wardrobe() {
 
     return (
         <div className="py-20 px-4">
-        <Link href="/Wardrobe" className="text-lg font-bold mb-2 hover:cursor-pointer">Wardrobe</Link>
-        {/* Tops Section */}
-        <div className="mb-8">
-            <h1 className="text-lg font-bold mb-2">Shoes:</h1>
-            <div className="flex space-x-4">
-            <ItemCard itemType="shoes"/>
+            <Link href="/Wardrobe" className="text-lg font-bold mb-2 hover:cursor-pointer">Wardrobe</Link>
+            {/* Tops Section */}
+            <div className="mb-8">
+                <h1 className="text-lg font-bold mb-2">First Name:</h1>
+                <h1>{user?.first_name}</h1>
             </div>
-        </div>
-        {/* Render the Modal */}
-        {modalOpen && (
-            <div ref={modalRef}>
-            <AddItemModal modalOpen={modalOpen} setModalOpen={setModalOpen} />
-            </div>
-        )}
+            {/* Render the Modal */}
+            {modalOpen && (
+                <div ref={modalRef}>
+                    <AddItemModal modalOpen={modalOpen} setModalOpen={setModalOpen} />
+                </div>
+            )}
         </div>
     );
 }

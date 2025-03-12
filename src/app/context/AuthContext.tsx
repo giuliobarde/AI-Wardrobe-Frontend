@@ -5,10 +5,15 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 
 export interface UserData {
-  email: string;
-  user_id: string;
-  access_token: string;
-  message: string;
+    email: string;
+    user_id: string;
+    access_token: string;
+    message: string;
+    first_name?: string;
+    last_name?: string;
+    username?: string;
+    member_since?: string;
+    gender?: string;
 }
 
 export interface AuthContextType {
@@ -36,21 +41,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const login = async (email: string, password: string) => {
         try {
-            // Send identifier instead of email so it matches the backend model.
             const response = await axios.post("http://localhost:8000/sign-in/", {
                 identifier: email,
                 password,
-            },
-            {
-              headers: { "Content-Type": "application/json" },
+            }, {
+                headers: { "Content-Type": "application/json" },
             });
         
-            // Build the user object (backend returns user_id, access_token, message)
             const userData: UserData = {
-                email, // using the email from the form
+                email,
                 user_id: response.data.user_id,
                 access_token: response.data.access_token,
                 message: response.data.message,
+                first_name: response.data.first_name,
+                last_name: response.data.last_name,
+                username: response.data.username,
+                member_since: response.data.member_since,
+                gender: response.data.gender,
             };
         
             axios.defaults.headers.common["Authorization"] = `Bearer ${userData.access_token}`;
@@ -60,7 +67,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } catch (error: any) {
             console.error("Login failed:", error.response ? error.response.data : error.message);
         }
-    };      
+    }; 
 
     const signup = async (
         email: string,
@@ -114,11 +121,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 };
 
 export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
 };
 
 export default AuthContext;
