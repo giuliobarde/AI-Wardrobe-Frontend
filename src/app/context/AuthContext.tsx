@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(null);
         delete axios.defaults.headers.common["Authorization"];
         localStorage.removeItem("token");
-        router.push("/login");
+        router.push("/");
     };
 
     // TEMPORARY AUTO-LOGIN EFFECT: Automatically log in with hard-coded credentials on refresh

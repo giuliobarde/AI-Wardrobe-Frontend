@@ -34,6 +34,11 @@ export default function Signup() {
   return (
     <div className="py-30">
       <div className="max-w-md mx-auto p-4 border rounded shadow">
+        <div className="flex justify-end mb-4">
+          <Link href="/" className="text-blue-500 underline">
+            Back to Home
+          </Link>
+        </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold">Sign Up</h1>
           <input
