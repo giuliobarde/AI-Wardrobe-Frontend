@@ -27,21 +27,13 @@ export default function OutfitsPage() {
         body: JSON.stringify({ user_message: occasion, temp: "20C" }),
       });
 
-      if (!response.ok || !response.body) {
+      if (!response.ok) {
         throw new Error("Network response was not ok");
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let done = false;
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        if (value) {
-          const chunk = decoder.decode(value, { stream: !done });
-          setOutfit((prev) => prev + chunk);
-        }
-      }
+      // Parse the JSON response
+      const data = await response.json();
+      setOutfit(data.response);
     } catch (err: any) {
       console.error(err);
       setError("Failed to generate outfit.");

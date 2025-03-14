@@ -31,6 +31,7 @@ const itemTypeOptions = {
         "jeans",
         "pants",
         "shorts",
+        "suit pants",
         "sweatpants",
     ],
     shoes: [
@@ -47,6 +48,7 @@ const itemTypeOptions = {
         "overcoat",
         "puffer jacket",
         "trenchcoat",
+        "suit jacket",
     ],
   };
   
