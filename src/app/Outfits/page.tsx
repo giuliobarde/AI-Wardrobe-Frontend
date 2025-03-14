@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function OutfitsPage() {
   const [occasion, setOccasion] = useState("");
   const [outfit, setOutfit] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { user } = useAuth(); // Get token from auth context
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -17,8 +19,11 @@ export default function OutfitsPage() {
     try {
       const response = await fetch("http://localhost:8000/chat/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Send the occasion and fixed temperature (20C)
+        headers: {
+          "Content-Type": "application/json",
+          // Include the Authorization header with the token from AuthContext
+          "Authorization": `Bearer ${user?.access_token}`,
+        },
         body: JSON.stringify({ user_message: occasion, temp: "20C" }),
       });
 
@@ -37,7 +42,7 @@ export default function OutfitsPage() {
           setOutfit((prev) => prev + chunk);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setError("Failed to generate outfit.");
     }

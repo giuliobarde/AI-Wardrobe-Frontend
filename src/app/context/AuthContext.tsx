@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
             axios.defaults.headers.common["Authorization"] = `Bearer ${userData.access_token}`;
             localStorage.setItem("token", userData.access_token);
+            console.log("Access token:", userData.access_token);
             setUser(userData);
             router.push("/Wardrobe");
         } catch (error: any) {
