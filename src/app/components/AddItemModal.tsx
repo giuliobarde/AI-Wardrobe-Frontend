@@ -14,24 +14,29 @@ type ItemModalProps = {
 const itemTypeOptions = {
     tops: [
         "blouse",
+        "button-down shirt",
+        "button-up shirt",
         "cardigan",
-        "cut off shirt",
+        "crewneck sweater",
         "jersey",
+        "hoodie",
         "long sleeve t-shirt",
         "polo shirt",
         "shirt",
-        "short sleeve t-shirt",
         "sweater",
         "sweatshirt",
         "tank top",
+        "t-shirt",
+        "turtleneck",
     ],
     bottoms: [
         "chinos",
-        "courderoys",
+        "corduroys",
+        "dress pants",
         "jeans",
-        "pants",
+        "leggings",
         "shorts",
-        "suit pants",
+        "skirt",
         "sweatpants",
     ],
     shoes: [
@@ -44,15 +49,17 @@ const itemTypeOptions = {
         "sneakers",
     ],
     outerware: [
-        "bomber",
+        "bomber jacket",
+        "denim jacket",
+        "leather jacket",
         "overcoat",
         "puffer jacket",
-        "trenchcoat",
-        "suit jacket",
+        "raincoat",
+        "trench coat",
     ],
-  };
+};
   
-  const materialOptions = {
+const materialOptions = {
     cold: [
         "cashmere",
         "courderoy",
@@ -73,7 +80,7 @@ const itemTypeOptions = {
         "leather",
         "suede",
     ],
-  };
+};
 
 const weatherOptions = {
     cold: ["cold", "very cold"],
@@ -82,37 +89,96 @@ const weatherOptions = {
     rainy: ["rainy", "drizzly"],
 };
 
+const fitOptions = {
+    very_formal: ["tailord fit"],
+    formal: ["slim", "fit"],
+    somewhat_formal: ["regular"],
+    not_formal: ["baggy", "skinny"],
+};
+
+const formalityOptions = { 
+    formalities: ["very formal", "formal", "somewhat formal", "not formal"]
+};  
+
+const patternsOptions = {
+    patterns: [
+        "abstract",
+        "animal print",
+        "argyle",
+        "checkered",
+        "floral",
+        "geometric",
+        "gingham",
+        "herringbone",
+        "houndstooth",
+        "paisley",
+        "pinstripe",
+        "plaid",
+        "polka dot",
+        "solid",
+        "striped",
+        "tie-dye",
+        "windowpane",
+    ],
+};
+  
+
 export default function AddItemModal({ modalOpen, setModalOpen }: ItemModalProps) {
     // States for dropdown selections
     const [itemType, setItemType] = useState("");
     const [subType, setSubType] = useState("");
     const [material, setMaterial] = useState("");
     const [suitableWeather, setSuitableWeather] = useState("");
+    const [fit, setFit] = useState("");
+    const [formality, setFormality] = useState("");
 
     // Other text fields
     const [color, setColor] = useState("");
-    const [formality, setFormality] = useState("");
     const [pattern, setPattern] = useState("");
-    const [fit, setFit] = useState("");
     const [suitableOccasion, setSuitableOccasion] = useState("");
     const [error, setError] = useState<string | null>(null);
     const { user } = useAuth();
 
     // Handler for item type dropdown
-    const handleItemTypeSelect = (group: string, option: string) => {
+    const handleItemTypeSelect = (group: string, options: string) => {
         setItemType(group);
-        setSubType(option);
+        setSubType(options)
     };
 
     // Handler for material dropdown.
     const handleMaterialSelect = (group: string, option: string) => {
         setMaterial(option);
-        setSuitableWeather(group)
+        if (group == "non_rain"){
+            setSuitableWeather("no rain")
+        } else {
+            setSuitableWeather(group)
+        }
     };
 
     // Handler for weather dropdown.
     const handleWeatherSelect = (group: string, option: string) => {
-        setSuitableWeather(option);
+        setSuitableWeather(group);
+    };
+
+    const handleFitSelect = (group: string, option: string) => {
+        setFit(option)
+        if (group == ("very_formal")) {
+            setFormality("very formal");
+        } else if (group == ("somewhat_formal")) {
+            setFormality("somewhat formal");
+        } else if (group == ("not_formal")) {
+            setFormality("not formal");
+        } else {
+            setFormality(group);
+        }
+    };
+
+    const handleFormalitySelect = (option: string) => {
+        setFormality(option);
+    };
+
+    const handlePatternSelect = (group: string, option: string) => {
+        setPattern(option);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -183,50 +249,40 @@ export default function AddItemModal({ modalOpen, setModalOpen }: ItemModalProps
                 </button>
                 <h1 className="text-2xl font-bold mb-4">Add Item</h1>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-                    {/* Dropdown for item type */}
                     <div>
                         <label className="block font-bold mb-1">Item Type</label>
                         <SearchableDropdown onSelect={handleItemTypeSelect} options={itemTypeOptions} />
                     </div>
-                    {/* Dropdown for material */}
                     <div>
                         <label className="block font-bold mb-1">Material</label>
                         <SearchableDropdown onSelect={handleMaterialSelect} options={materialOptions} />
                     </div>
-                    {/* Dropdown for weather type, controlled by suitableWeather state */}
+                    <div>
+                        <label className="block font-bold mb-1">Color</label>
+                        <input
+                            type="text"
+                            placeholder="Color"
+                            className="p-2 border rounded"
+                            value={color}
+                            onChange={(e) => setColor(e.target.value)}
+                        />
+                    </div>
                     <div>
                         <label className="block font-bold mb-1">Suitable for Weather</label>
                         <SearchableDropdown onSelect={handleWeatherSelect} options={weatherOptions} value={suitableWeather} />
                     </div>
-                    {/* Other fields */}
-                    <input
-                        type="text"
-                        placeholder="Color"
-                        className="p-2 border rounded"
-                        value={color}
-                        onChange={(e) => setColor(e.target.value)}
-                    />
-                    <input
-                        type="text"
-                        placeholder="Formality"
-                        className="p-2 border rounded"
-                        value={formality}
-                        onChange={(e) => setFormality(e.target.value)}
-                    />
-                    <input
-                        type="text"
-                        placeholder="Pattern"
-                        className="p-2 border rounded"
-                        value={pattern}
-                        onChange={(e) => setPattern(e.target.value)}
-                    />
-                    <input
-                        type="text"
-                        placeholder="Fit"
-                        className="p-2 border rounded"
-                        value={fit}
-                        onChange={(e) => setFit(e.target.value)}
-                    />
+                    <div>
+                        <label className="block font-bold mb-1">Fit</label>
+                        <SearchableDropdown onSelect={handleFitSelect} options={fitOptions} />
+                    </div>
+                    <div>
+                        <label className="block font-bold mb-1">Formality</label>
+                        <SearchableDropdown onSelect={handleFormalitySelect} options={formalityOptions} value={formality}/>
+                    </div>
+                    <div>
+                        <label className="block font-bold mb-1">Pattern</label>
+                        <SearchableDropdown onSelect={handlePatternSelect} options={patternsOptions} />
+                    </div>
                     {error && <p className="text-red-500">{error}</p>}
                     <button type="submit" className="p-2 bg-blue-500 text-white rounded">
                         Add item
