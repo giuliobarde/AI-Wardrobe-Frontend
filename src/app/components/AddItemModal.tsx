@@ -28,6 +28,7 @@ const itemTypeOptions = {
         "tank top",
         "t-shirt",
         "turtleneck",
+        "tuxido shirt",
     ],
     bottoms: [
         "chinos",
@@ -38,6 +39,7 @@ const itemTypeOptions = {
         "shorts",
         "skirt",
         "sweatpants",
+        "tuxedo pants",
     ],
     shoes: [
         "boots",
@@ -55,7 +57,9 @@ const itemTypeOptions = {
         "overcoat",
         "puffer jacket",
         "raincoat",
+        "suit jacket",
         "trench coat",
+        "tuxedo jacket"
     ],
 };
   
@@ -75,9 +79,11 @@ const materialOptions = {
         "cotton",
         "silk",
         "synthetic",
+        "virgin wool"
     ],
     non_rain: [
         "leather",
+        "patent leather",
         "suede",
     ],
 };
