@@ -52,7 +52,7 @@ export default function OutfitsPage() {
           onChange={(e) => setOccasion(e.target.value)}
           className="p-2 border border-gray-300 rounded"
           required
-        />
+        /> {/* Placeholders And Vanish Input */}
         <button
           type="submit"
           className="bg-blue-500 text-white py-2 rounded"

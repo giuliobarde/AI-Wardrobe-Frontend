@@ -39,7 +39,7 @@ export default function Wardrobe() {
   }, [modalOpen]);
 
   return (
-    <div className="py-20 px-4 min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-black text-white flex flex-col justify-center items-center">
+    <div className="py-20 px-4">
       {/* Tops Section */}
       <div className="mb-8">
         <Link href="/Tops" className="text-lg font-bold mb-2 hover:cursor-pointer">Tops</Link>
@@ -51,7 +51,7 @@ export default function Wardrobe() {
           >
             <Plus className="w-8 h-8 text-blue-600" />
           </div>
-          <ItemCard itemType="tops"/>
+          <ItemCard itemType="tops"/>{/* Turn into Expandable Cards */}
         </div>
       </div>
 
