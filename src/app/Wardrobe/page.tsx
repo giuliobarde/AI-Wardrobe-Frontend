@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import AddItemModal from "../components/AddItemModal";
+import AddItem from "../components/AddItem";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import ItemCard from "../components/ItemCard";
@@ -96,7 +96,7 @@ export default function Wardrobe() {
       {/* Render the Modal */}
       {modalOpen && (
         <div ref={modalRef}>
-          <AddItemModal modalOpen={modalOpen} setModalOpen={setModalOpen} />
+          <AddItem modalOpen={modalOpen} setModalOpen={setModalOpen} />
         </div>
       )}
     </div>

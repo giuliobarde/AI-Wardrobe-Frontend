@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import AddItemModal from "../components/AddItemModal";
+import AddItemModal from "../components/AddItem";
 import Link from "next/link";
 import ItemCard from "../components/ItemCard";
 
