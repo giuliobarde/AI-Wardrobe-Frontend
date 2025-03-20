@@ -16,7 +16,7 @@ export default function Wardrobe() {
 
   useEffect(() => {
     if (!user?.access_token) {
-      router.push("/Login");
+      router.push("/");
     }
   }, [user, router]);
 

@@ -5,7 +5,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import SignUpModal from "@/app/components/SignUpModal";
 import LoginModal from "@/app/components/LoginModal";
 import Link from "next/link";
-import { AuroraBackground } from "@/app/components/ui/aurora-background"
+import { AuroraBackground } from "@/app/components/ui/aurora-background";
 import { motion } from "motion/react";
 
 export default function Home() {
@@ -13,22 +13,22 @@ export default function Home() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
 
+  const headingText = user
+    ? `Welcome, ${user.username || user.email}!`
+    : "Welcome to AI Wardrobe";
+
   return (
     <AuroraBackground>
       <motion.div
-        initial={{ opacity: 0.0, y: 40 }}
+        initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{
-          delay: 0.3,
-          duration: 0.8,
-          ease: "easeInOut",
-        }}
+        transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
         className="relative flex flex-col gap-4 items-center justify-center px-4"
       >
         {/* Landing Content */}
         <main className="flex flex-col items-center justify-center px-4 text-center animate-fadeIn transition-all duration-500">
-          <h1 className="text-5xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
-            Welcome to AI Wardrobe
+          <h1 className="text-5xl font-extrabold leading-relaxed mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+            {headingText}
           </h1>
           <p className="text-xl mb-8 max-w-2xl">
             Discover a new way to style your wardrobe. Our AI-powered outfit
@@ -36,8 +36,7 @@ export default function Home() {
             personal style.
             <br />
             <span className="text-sm text-gray-400">
-              Mix, match, and master your everyday looks
-              with ease.
+              Mix, match, and master your everyday looks with ease.
             </span>
           </p>
           <div className="flex space-x-4">
@@ -70,16 +69,16 @@ export default function Home() {
         </footer>
         {/* Render modals */}
         {showLogin && (
-          <LoginModal 
-            modalOpen={showLogin} 
-            setModalOpen={setShowLogin} 
-            setShowSignup={setShowSignup} 
+          <LoginModal
+            modalOpen={showLogin}
+            setModalOpen={setShowLogin}
+            setShowSignup={setShowSignup}
           />
         )}
         {showSignup && (
-          <SignUpModal 
-            modalOpen={showSignup} 
-            setModalOpen={setShowSignup} 
+          <SignUpModal
+            modalOpen={showSignup}
+            setModalOpen={setShowSignup}
             setShowLogin={setShowLogin}
           />
         )}

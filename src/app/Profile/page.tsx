@@ -11,7 +11,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user?.access_token) {
-      router.push("/Login");
+      router.push("/");
     }
   }, [user, router]);
 
