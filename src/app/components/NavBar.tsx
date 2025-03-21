@@ -53,26 +53,26 @@ export default function Navbar() {
           <div className="flex items-center space-x-6 text-lg">
             <Link
               href="/"
-              className={`transition-colors hover:text-purple-300 ${
-                pathname === "/" ? "font-semibold text-purple-500" : "text-purple-200"
+              className={`transition-colors hover:text-blue-300 ${
+                pathname === "/" ? "font-semibold text-blue-500" : "text-blue-200"
               }`}
             >
               Home
             </Link>
-            <span className="text-purple-500">/</span>
+            <span className="text-blue-300">/</span>
             <Link
               href="/Wardrobe"
               className={`transition-colors hover:text-purple-300 ${
-                pathname === "/Wardrobe" ? "font-semibold text-purple-500" : "text-purple-200"
+                pathname === "/Wardrobe" ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-500" : "text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-purple-300"
               }`}
             >
               Wardrobe
             </Link>
-            <span className="text-purple-500">/</span>
+            <span className="text-purple-400">/</span>
             <Link
               href="/Outfits"
-              className={`transition-colors hover:text-purple-300 ${
-                pathname === "/Outfits" ? "font-semibold text-purple-500" : "text-purple-200"
+              className={`transition-colors hover:text-purple-400 ${
+                pathname === "/Outfits" ? "font-semibold text-purple-500" : "text-purple-300"
               }`}
             >
               Outfits

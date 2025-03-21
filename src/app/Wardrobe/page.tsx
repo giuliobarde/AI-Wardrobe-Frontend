@@ -1,18 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import AddItem from "../components/AddItem";
-import { Plus } from "lucide-react";
 import Link from "next/link";
 import ItemCard from "../components/ItemCard";
-import { useOutsideClick } from "../hooks/use-outside-click";
+import AddItem from "../components/AddItem";
 
 export default function Wardrobe() {
   const [error, setError] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -22,83 +18,75 @@ export default function Wardrobe() {
     }
   }, [user, router]);
 
-  useOutsideClick(modalRef, () => {
-    setModalOpen(false);
-  });
-
   return (
-    <div className="py-20 px-4">
+    <div className="min-h-screen bg-gray-50 py-16 px-4">
+      <h1 className="text-4xl font-bold mb-12 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+        Your Wardrobe
+      </h1>
+
       {/* Tops Section */}
-      <div className="mb-8">
-        <Link href="/Tops" className="text-lg font-bold mb-2 hover:cursor-pointer">
-          Tops
-        </Link>
+      <section className="mb-12">
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/Tops" className="text-2xl font-bold hover:underline">
+            Tops
+          </Link>
+          <Link href="/Tops" className="text-sm text-blue-500 hover:underline">
+            View All
+          </Link>
+        </div>
         <div className="flex space-x-4 overflow-x-auto">
-          {/* Add Item Card */}
-          <div
-            onClick={() => setModalOpen(true)}
-            className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
-          >
-            <Plus className="w-8 h-8 text-blue-600" />
-          </div>
+          <AddItem />
           <ItemCard itemType="tops" />
         </div>
-      </div>
+      </section>
 
       {/* Bottoms Section */}
-      <div className="mb-8">
-        <Link href="/Bottoms" className="text-lg font-bold mb-2 hover:cursor-pointer">
-          Bottoms
-        </Link>
+      <section className="mb-12">
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/Bottoms" className="text-2xl font-bold hover:underline">
+            Bottoms
+          </Link>
+          <Link href="/Bottoms" className="text-sm text-blue-500 hover:underline">
+            View All
+          </Link>
+        </div>
         <div className="flex space-x-4 overflow-x-auto">
-          <div
-            onClick={() => setModalOpen(true)}
-            className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
-          >
-            <Plus className="w-8 h-8 text-blue-600" />
-          </div>
+          <AddItem />
           <ItemCard itemType="bottoms" />
         </div>
-      </div>
+      </section>
 
       {/* Shoes Section */}
-      <div className="mb-8">
-        <Link href="/Shoes" className="text-lg font-bold mb-2 hover:cursor-pointer">
-          Shoes
-        </Link>
+      <section className="mb-12">
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/Shoes" className="text-2xl font-bold hover:underline">
+            Shoes
+          </Link>
+          <Link href="/Shoes" className="text-sm text-blue-500 hover:underline">
+            View All
+          </Link>
+        </div>
         <div className="flex space-x-4 overflow-x-auto">
-          <div
-            onClick={() => setModalOpen(true)}
-            className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
-          >
-            <Plus className="w-8 h-8 text-blue-600" />
-          </div>
+          <AddItem />
           <ItemCard itemType="shoes" />
         </div>
-      </div>
+      </section>
 
       {/* Outerware Section */}
-      <div className="mb-8">
-        <Link href="/Outerware" className="text-lg font-bold mb-2 hover:cursor-pointer">
-          Outerware
-        </Link>
+      <section className="mb-12">
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/Outerware" className="text-2xl font-bold hover:underline">
+            Outerware
+          </Link>
+          <Link href="/Outerware" className="text-sm text-blue-500 hover:underline">
+            View All
+          </Link>
+        </div>
         <div className="flex space-x-4 overflow-x-auto">
-          <div
-            onClick={() => setModalOpen(true)}
-            className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
-          >
-            <Plus className="w-8 h-8 text-blue-600" />
-          </div>
+          <AddItem />
           <ItemCard itemType="outerware" />
         </div>
-      </div>
-
-      {/* Render the Modal */}
-      {modalOpen && (
-        <div ref={modalRef}>
-          <AddItem modalOpen={modalOpen} setModalOpen={setModalOpen} />
-        </div>
-      )}
+      </section>
     </div>
   );
 }
