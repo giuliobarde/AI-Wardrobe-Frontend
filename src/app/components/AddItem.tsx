@@ -41,11 +41,41 @@ const itemTypeOptions: Record<"tops" | "bottoms" | "shoes" | "outerware", string
     "tuxedo pants",
   ].sort(),
   shoes: [
-    "boots",
-    "dress shoes",
-    "heels",
-    "loafers",
+    "rain boots",
+    "combat boots",
+    "chelsea boots",
+    "dress boots",
+    "work boots",
+    "thigh-high boots",
+    "knee-high boots",
+    "logger boots",
+    "harness boots",
+    "heel boots",
+    "cowboy boots",
+    "chukka boots",
+    "hiking boots",
+    "wingtip boots",
+    "whole cut oxfords",
+    "plain toe oxfords",
+    "cap toe oxfords",
+    "wing tip oxfords",
+    "plain toe derbies",
+    "cap toe derbies",
+    "wing tip derbies",
+    "single monk strap",
+    "double monk strap",
+    "triple monk strap",
+    "kitten heels",
+    "stiletto heels",
+    "wedges", 
+    "platforms",
+    "pennie loafers",
+    "bit loafers",
+    "tassle loafers",
+    "kiltie loafers",
     "running shoes",
+    "opera pumps",
+    "ribbon pumps",
     "sandals",
     "sneakers",
   ].sort(),
@@ -62,16 +92,17 @@ const itemTypeOptions: Record<"tops" | "bottoms" | "shoes" | "outerware", string
   ].sort(),
 };
 
-const materialOptions: Record<"cold" | "hot" | "all" | "non_rain", string[]> = {
-  cold: ["cashmere", "courderoy", "fleece", "flanel", "vicuña", "wool"].sort(),
+const materialOptions: Record<"cold" | "hot" | "all" | "non_rain" | "rain", string[]> = {
+  cold: ["cashmere", "corduroy", "fleece", "flanel", "vicuña", "wool"].sort(),
   hot: ["linen"],
-  all: ["cotton", "silk", "synthetic", "virgin wool"].sort(),
-  non_rain: ["leather", "patent leather", "suede"].sort(),
+  all: ["cotton", "silk", "synthetic", "virgin wool", "velvet"].sort(),
+  non_rain: ["leather", "patient leather", "suede"].sort(),
+  rain: ["rubber"].sort(),
 };
 
 const weatherOptions: Record<"cold" | "moderate" | "hot" | "rainy", string[]> = {
   cold: ["cold", "very cold"].sort(),
-  moderate: ["all", "moderate", "no rain"].sort(),
+  moderate: ["all", "moderate", "no rain", "warm"].sort(),
   hot: ["hot", "very hot"].sort(),
   rainy: ["drizzly", "rainy"].sort(),
 };
@@ -84,7 +115,7 @@ const fitOptions: Record<"very_formal" | "formal" | "somewhat_formal" | "not_for
 };
 
 const formalityOptions: Record<"formalities", string[]> = {
-  formalities: ["formal", "not formal", "somewhat formal", "very formal"].sort(),
+  formalities: ["high", "low", "very low", "very high", "medium", "somewhat high"].sort(),
 };
 
 const patternsOptions: Record<"patterns", string[]> = {
@@ -107,6 +138,239 @@ const patternsOptions: Record<"patterns", string[]> = {
     "tie-dye",
     "windowpane",
   ].sort(),
+};
+
+// Define a mapping of option values to the state changes
+const qualitySettingsMap: Record<
+  string,
+  Partial<{
+    material: string;
+    suitableWeather: string;
+    color: string;
+    formality: string;
+    fit: string;
+    pattern: string;
+  }>
+> = {
+  // Shoes
+  "rain boots": {
+    material: "rubber",
+    suitableWeather: "rain",
+    formality: "low",
+  },
+  "combat boots": {
+    formality: "low",
+  },
+  "chelsea boots": {
+    formality: "somewhat high",
+    fit: "slim",
+    pattern: "solid",
+  },
+  "dress boots": {
+    formality: "high",
+    pattern: "solid",
+  },
+  "work boots": {
+    
+  },
+  "thigh-high boots": {
+    formality: "high",
+  },
+  "knee-high boots": {
+
+  },
+  "logger boots": {
+    
+  },
+  "harness boots": {
+    
+  },
+  "heel boots": {
+    
+  },
+  "cowboy boots": {
+    
+  },
+  "chukka boots": {
+    
+  },
+  "hiking boots": {
+    
+  },
+  "wingtip boots": {
+    
+  },
+  "whole cut oxfords": {
+    formality: "very high",
+    suitableWeather: "all",
+    pattern: "solid",
+    material: "leather",
+  },
+  "plain toe oxfords": {
+    formality: "very high",
+    suitableWeather: "all",
+    pattern: "solid",
+    material: "leather",
+  },
+  "cap toe oxfords": {
+    formality: "very high",
+    suitableWeather: "all",
+    pattern: "solid",
+    material: "leather",
+  },
+  "wing tip oxfords": {
+    formality: "high",
+    suitableWeather: "all",
+    pattern: "broguing",
+    material: "leather",
+  },
+  "plain toe derbies": {
+    formality: "high",
+    suitableWeather: "all",
+    material: "leather",
+  },
+  "cap toe derbies": {
+    formality: "high",
+    suitableWeather: "all",
+    material: "leather",
+  },
+  "wing tip derbies": {
+    formality: "high",
+    suitableWeather: "all",
+    pattern: "broguing",
+    material: "leather",
+  },
+  "single monk strap": {
+    
+  },
+  "double monk strap": {
+    
+  },
+  "triple monk strap": {
+    
+  },
+  "kitten heels": {
+    
+  },
+  "stiletto heels": {
+    
+  },
+  "wedges": {
+    
+  },
+  "platforms": {
+    formality: "low",
+    suitableWeather: "all",
+  },
+  "pennie loafers": {
+    formality: "high",
+    suitableWeather: "warm",
+    material: "leather",
+  },
+  "horsebit loafers": {
+    formality: "high",
+    suitableWeather: "warm",
+    material: "leather",
+  },
+  "tassle loafers": {
+    formality: "high",
+    suitableWeather: "warm",
+    material: "leather",
+  },
+  "kiltie loafers": {
+    formality: "high",
+    suitableWeather: "warm",
+    material: "leather",
+  },
+  "running shoes": {
+    formality: "low",
+    suitableWeather: "all",
+  },
+  "opera pumps": {
+    color: "black",
+    formality: "very high",
+    suitableWeather: "all",
+    material: "patient leather",
+  },
+  "ribbon pumps": {
+    color: "black",
+    formality: "very high",
+    suitableWeather: "all",
+    material: "patient leather",
+  },
+  "sandals": {
+    formality: "low",
+    suitableWeather: "hot",
+  },
+  "sneakers": {
+    formality: "low",
+    suitableWeather: "moderate",
+  },  
+  
+
+  // Tops
+  "t-shirt": {
+    material: "cotton",
+    formality: "low",
+    suitableWeather: "hot",
+  },
+  "polo shirt": {
+    material: "cotton",
+    formality: "medium",
+    suitableWeather: "moderate",
+  },
+  "button-up shirt": {
+    material: "cotton",
+    formality: "high",
+    suitableWeather: "moderate",
+  },
+  "sweater": {
+    material: "wool",
+    formality: "medium",
+    suitableWeather: "cold",
+  },
+  "hoodie": {
+    material: "synthetic",
+    formality: "low",
+    suitableWeather: "moderate",
+  },
+
+  // Bottoms
+  "jeans": {
+    material: "cotton",
+    formality: "medium",
+    suitableWeather: "moderate",
+  },
+  "sweatpants": {
+    formality: "very low",
+    suitableWeather: "all",
+  },
+  "dress pants": {
+    formality: "high",
+    fit: "tailored fit",
+    suitableWeather: "moderate",
+  },
+  "skirt": {
+    formality: "medium",
+    suitableWeather: "hot",
+  },
+
+  // Outerware
+  "trench coat": {
+    material: "cotton",
+    formality: "high",
+    suitableWeather: "rainy",
+  },
+  "leather jacket": {
+    material: "leather",
+    formality: "medium",
+    suitableWeather: "moderate",
+  },
+  "puffer jacket": {
+    material: "synthetic",
+    formality: "low",
+    suitableWeather: "cold",
+  },
 };
 
 export default function AddItem(props: AddItemProps) {
@@ -133,6 +397,17 @@ export default function AddItem(props: AddItemProps) {
   const handleItemTypeSelect = (group: string, option: string) => {
     setItemType(group);
     setSubType(option);
+  
+    // Apply settings from the mapping if they exist for the selected option.
+    const settings = qualitySettingsMap[option];
+    if (settings) {
+      if (settings.material) setMaterial(settings.material);
+      if (settings.suitableWeather) setSuitableWeather(settings.suitableWeather);
+      if (settings.color) setColor(settings.color);
+      if (settings.formality) setFormality(settings.formality);
+      if (settings.fit) setColor(settings.fit);
+      if (settings.pattern) setFormality(settings.pattern);
+    }
   };
 
   const handleMaterialSelect = (group: string, option: string) => {
@@ -147,11 +422,13 @@ export default function AddItem(props: AddItemProps) {
   const handleFitSelect = (group: string, option: string) => {
     setFit(option);
     if (group === "very_formal") {
-      setFormality("very formal");
+      setFormality("very high");
     } else if (group === "somewhat_formal") {
-      setFormality("somewhat formal");
+      setFormality("somewhat high");
+    } else if (group === "somewhat_formal") {
+      setFormality("somewhat high");
     } else if (group === "not_formal") {
-      setFormality("not formal");
+      setFormality("low");
     } else {
       setFormality(group);
     }
@@ -257,7 +534,7 @@ export default function AddItem(props: AddItemProps) {
                 </div>
                 <div>
                   <label className="block font-semibold mb-1">Material</label>
-                  <SearchableDropdown onSelect={handleMaterialSelect} options={materialOptions} />
+                  <SearchableDropdown onSelect={handleMaterialSelect} options={materialOptions} value={material}/>
                 </div>
                 <div>
                   <label className="block font-semibold mb-1">Color</label>
@@ -275,7 +552,7 @@ export default function AddItem(props: AddItemProps) {
                 </div>
                 <div>
                   <label className="block font-semibold mb-1">Fit</label>
-                  <SearchableDropdown onSelect={handleFitSelect} options={fitOptions} />
+                  <SearchableDropdown onSelect={handleFitSelect} options={fitOptions} value={fit}/>
                 </div>
                 <div>
                   <label className="block font-semibold mb-1">Formality</label>
@@ -283,7 +560,7 @@ export default function AddItem(props: AddItemProps) {
                 </div>
                 <div>
                   <label className="block font-semibold mb-1">Pattern</label>
-                  <SearchableDropdown onSelect={handlePatternSelect} options={patternsOptions} />
+                  <SearchableDropdown onSelect={handlePatternSelect} options={patternsOptions} value={pattern}/>
                 </div>
                 {error && (
                   <div className="col-span-2">

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useId } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { deleteClothingItem, displayClothingItem } from "../services/wardrobeService";
+import { deleteClothingItem, displayClothingItem, displayClothingItemById } from "../services/wardrobeService";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "@/app/hooks/use-outside-click";
@@ -24,10 +24,11 @@ interface Item {
 }
 
 interface ItemCardProps {
-  itemType: string;
+  itemType?: string; // optional if itemId is provided
+  itemId?: string;   // optional prop to display a specific item
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({ itemType }) => {
+const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId }) => {
   const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -42,19 +43,31 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType }) => {
         return;
       }
       try {
-        const response = await displayClothingItem(user.access_token, itemType);
-        if (response?.data && Array.isArray(response.data)) {
-          setItems(response.data);
+        let fetchedItems: Item[] = [];
+        if (itemId) {
+          // Fetch the item by id; no itemType required.
+          const response = await displayClothingItemById(user.access_token, itemId);
+          if (response?.data) {
+            // Ensure fetchedItems is an array.
+            fetchedItems = Array.isArray(response.data) ? response.data : [response.data];
+          }
+        } else if (itemType) {
+          const response = await displayClothingItem(user.access_token, itemType);
+          if (response?.data && Array.isArray(response.data)) {
+            fetchedItems = response.data;
+          }
         } else {
-          setItems([]);
+          setError("No item id or item type provided.");
+          return;
         }
+        setItems(fetchedItems);
       } catch (err) {
         setError("Failed to fetch items");
         console.error(err);
       }
     };
     fetchItems();
-  }, [user, itemType]);
+  }, [user, itemType, itemId]);
 
   // Close the modal if clicking outside its content.
   useOutsideClick(modalRef, () => setActiveItem(null));
@@ -69,7 +82,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType }) => {
 
     try {
       await deleteClothingItem(user.access_token, itemId);
-      // Optionally, remove the deleted item from the items state instead of reloading.
+      // Remove the deleted item from the items state.
       setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
       setActiveItem(null);
     } catch (err) {

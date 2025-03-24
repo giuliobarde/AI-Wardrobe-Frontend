@@ -3,56 +3,35 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import AddItemModal from "../components/AddItem";
 import Link from "next/link";
 import ItemCard from "../components/ItemCard";
 
 export default function Wardrobe() {
-    const [error, setError] = useState<string | null>(null);
-    const [modalOpen, setModalOpen] = useState(false);
-    const modalRef = useRef<HTMLDivElement>(null);
-    const { user } = useAuth();
-    const router = useRouter();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const router = useRouter();
 
-    useEffect(() => {
-        if (!user?.access_token) {
-        router.push("/");
-        }
-    }, [user, router]);
+  useEffect(() => {
+    if (!user?.access_token) {
+      router.push("/");
+    }
+  }, [user, router]);
 
-    // Close modal when clicking outside
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-                setModalOpen(false);
-            }
-        }
-
-        if (modalOpen) {
-            document.addEventListener("mousedown", handleClickOutside);
-        } else {
-            document.removeEventListener("mousedown", handleClickOutside);
-        }
-
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [modalOpen]);
-
-    return (
-        <div className="py-20 px-4">
-        <Link href="/Wardrobe" className="text-lg font-bold mb-2 hover:cursor-pointer">Wardrobe</Link>
-        {/* Tops Section */}
-        <div className="mb-8">
-            <h1 className="text-lg font-bold mb-2">Shoes:</h1>
-            <div className="flex space-x-4">
-            <ItemCard itemType="shoes"/>
-            </div>
+  return (
+    <div className="min-h-screen bg-gray-50 py-16 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <Link href="/Wardrobe" className="text-lg font-bold text-blue-600 hover:underline">
+            ← Back to Wardrobe
+          </Link>
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+            Shoes
+          </h1>
         </div>
-        {/* Render the Modal */}
-        {modalOpen && (
-            <div ref={modalRef}>
-            <AddItemModal modalOpen={modalOpen} setModalOpen={setModalOpen} />
-            </div>
-        )}
-        </div>
-    );
+        <ItemCard itemType="shoes" />
+      </div>
+    </div>
+
+  );
 }

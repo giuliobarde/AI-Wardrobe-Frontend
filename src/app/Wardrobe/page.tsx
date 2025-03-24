@@ -19,7 +19,7 @@ export default function Wardrobe() {
   }, [user, router]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-16 px-4">
+    <div className="min-h-screen bg-gray-50 py-20 px-4">
       <h1 className="text-4xl font-bold mb-12 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
         Your Wardrobe
       </h1>

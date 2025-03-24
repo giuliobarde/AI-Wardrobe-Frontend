@@ -42,6 +42,27 @@ export const displayClothingItem = async (token: string, itemType: string) => {
     }
 };
 
+export const displayClothingItemById = async (token: string, itemId: string) => {
+    try {
+        const response = await axios.get(
+            `${API_BASE_URL}/clothing_items/?id=${encodeURIComponent(itemId)}`,
+            {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+            }
+        );
+        return response.data;
+    } catch (error: any) {
+        console.error(
+            "Failed to display clothing item by id:",
+            error.response ? error.response.data : error.message
+        );
+        throw error;
+    }
+};
+
 export const deleteClothingItem = async (token: string, item: string) => {
     try {
         const response = await axios.post(

@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
+import ItemCard from "../components/ItemCard";
 
 export default function OutfitsPage() {
   const [occasion, setOccasion] = useState("");
-  const [outfit, setOutfit] = useState("");
+  const [outfit, setOutfit] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { user } = useAuth();
@@ -13,7 +14,7 @@ export default function OutfitsPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setOutfit("");
+    setOutfit(null);
     setError("");
 
     try {
@@ -31,6 +32,7 @@ export default function OutfitsPage() {
       }
 
       const data = await response.json();
+      // Assuming the backend returns an object with keys: occasion, outfit_items, description.
       setOutfit(data.response);
     } catch (err: any) {
       console.error(err);
@@ -41,7 +43,7 @@ export default function OutfitsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <h1 className="text-4xl font-bold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+      <h1 className="text-4xl py-20 font-bold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
         Outfit Recommendations
       </h1>
       <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6">
@@ -65,10 +67,38 @@ export default function OutfitsPage() {
         {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
       </div>
       {outfit && (
-        <div className="mt-8 w-full max-w-md bg-white shadow-lg rounded-xl p-6">
-          <h2 className="text-2xl font-bold mb-4">Outfit Recommendation</h2>
-          <p className="whitespace-pre-wrap text-gray-800">{outfit}</p>
-        </div>
+        <>
+          <div className="mt-8 w-full max-w-md bg-white shadow-lg rounded-xl p-6">
+            <h2 className="text-2xl font-bold mb-4">Outfit Recommendation</h2>
+            <div className="text-gray-800">
+              <p>
+                <strong>Occasion:</strong> {outfit.occasion}
+              </p>
+              <ul className="list-disc pl-5 my-4">
+                {outfit.outfit_items &&
+                  outfit.outfit_items.map((item: any, index: number) => (
+                    <li key={index}>
+                      <strong>Item {index + 1}:</strong> {item.sub_type} -{" "}
+                      {item.color} (ID: {item.id})
+                    </li>
+                  ))}
+              </ul>
+              <p>
+                <strong>Description:</strong> {outfit.description}
+              </p>
+            </div>
+          </div>
+          {outfit.outfit_items && outfit.outfit_items.length > 0 && (
+            <div className="mt-8 w-full max-w-4xl">
+              <h2 className="text-2xl font-bold mb-4 text-center">Outfit Items</h2>
+              <div className="flex items-center justify-between mb-4">
+                {outfit.outfit_items.map((item: any) => (
+                  <ItemCard key={item.id} itemId={item.id} />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
