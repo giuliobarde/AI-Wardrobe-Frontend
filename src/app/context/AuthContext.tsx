@@ -108,6 +108,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     router.push("/");
   };
 
+  // Inactivity timer: reset timer on user activity and log out after 20 minutes of inactivity.
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const handleSessionTimeout = () => {
+      logout();
+      router.push("/?sessionExpired=true");
+    };
+
+    const resetTimer = () => {
+      if (user) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(handleSessionTimeout, 20 * 60 * 1000); // 20 minutes in ms
+      }
+    };
+
+    // Set up event listeners for user activity
+    window.addEventListener("mousemove", resetTimer);
+    window.addEventListener("keydown", resetTimer);
+    window.addEventListener("click", resetTimer);
+    window.addEventListener("scroll", resetTimer);
+
+    // Start the timer immediately
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("mousemove", resetTimer);
+      window.removeEventListener("keydown", resetTimer);
+      window.removeEventListener("click", resetTimer);
+      window.removeEventListener("scroll", resetTimer);
+    };
+  }, [user, router]);
+
   // Updated auto-login: only run if user is null.
   useEffect(() => {
     if (!user) {

@@ -1,21 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import SignUpModal from "@/app/components/SignUpModal";
 import LoginModal from "@/app/components/LoginModal";
 import Link from "next/link";
 import { AuroraBackground } from "@/app/components/ui/aurora-background";
 import { motion } from "motion/react";
+import { useSearchParams } from "next/navigation";
 
 export default function Home() {
   const { user } = useAuth();
-  const [showLogin, setShowLogin] = useState(false);
+  const searchParams = useSearchParams();
+  // If sessionExpired=true is in the query, initialize showLogin as true.
+  const initialShowLogin = searchParams.get("sessionExpired") === "true";
+  const [showLogin, setShowLogin] = useState(initialShowLogin);
   const [showSignup, setShowSignup] = useState(false);
 
   const headingText = user
     ? `Welcome, ${user.username || user.email}!`
     : "Welcome to AI Wardrobe";
+
+  // Optionally, clear the query parameter after showing the modal
+  useEffect(() => {
+    if (initialShowLogin) {
+      // You could add logic to remove the query parameter if desired.
+    }
+  }, [initialShowLogin]);
 
   return (
     <AuroraBackground>
