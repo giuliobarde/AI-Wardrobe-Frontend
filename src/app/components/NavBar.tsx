@@ -36,16 +36,19 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-gray-900 bg-opacity-75 shadow-lg">
       <div className="flex justify-between items-center px-6 h-16">
         {/* Left side: Logo & App Name */}
-        <Link href="/" className="flex items-center space-x-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
-            <svg
-              className="w-8 h-8 text-blue-400"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 0C5.373 0 0 5.373 0 12a12 12 0 0012 12c6.627 0 12-5.373 12-12S18.627 0 12 0zM10 17l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-            </svg>
-            <span className="text-xl font-bold from-blue-400 to-purple-600">AI Wardrobe</span>
+        <Link
+          href="/"
+          className="flex items-center space-x-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600"
+        >
+          <svg
+            className="w-8 h-8 text-blue-400"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 0C5.373 0 0 5.373 0 12a12 12 0 0012 12c6.627 0 12-5.373 12-12S18.627 0 12 0zM10 17l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+          <span className="text-xl font-bold from-blue-400 to-purple-600">AI Wardrobe</span>
         </Link>
 
         {/* Center Navigation Links - Only visible when user is logged in */}
@@ -63,7 +66,9 @@ export default function Navbar() {
             <Link
               href="/Wardrobe"
               className={`transition-colors hover:text-purple-300 ${
-                pathname === "/Wardrobe" ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-500" : "text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-purple-300"
+                pathname === "/Wardrobe"
+                  ? "font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-purple-500"
+                  : "text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-purple-300"
               }`}
             >
               Wardrobe
@@ -97,19 +102,24 @@ export default function Navbar() {
                 <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
                   <Link
                     href="/Profile"
+                    onClick={() => setDropdownOpen(false)}
                     className="flex items-center px-4 py-2 hover:bg-gray-700 text-gray-200"
                   >
                     <User className="w-4 h-4 mr-2" /> Profile
                   </Link>
                   <Link
                     href="/Settings"
+                    onClick={() => setDropdownOpen(false)}
                     className="flex items-center px-4 py-2 hover:bg-gray-700 text-gray-200"
                   >
                     <Settings className="w-4 h-4 mr-2" /> Settings
                   </Link>
                   <button
                     className="w-full flex items-center px-4 py-2 text-red-400 hover:bg-red-600 hover:text-white"
-                    onClick={handleLogout}
+                    onClick={(e) => {
+                      setDropdownOpen(false);
+                      handleLogout(e);
+                    }}
                   >
                     <LogOut className="w-4 h-4 mr-2" /> Logout
                   </button>
