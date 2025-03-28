@@ -26,9 +26,10 @@ interface Item {
 interface ItemCardProps {
   itemType?: string; // optional if itemId is provided
   itemId?: string;   // optional prop to display a specific item
+  limit?: number;    // optional prop to limit number of displayed items
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId }) => {
+const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit }) => {
   const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -60,14 +61,16 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId }) => {
           setError("No item id or item type provided.");
           return;
         }
-        setItems(fetchedItems);
+        // If a limit is provided, slice the fetched items.
+        const limitedItems = limit ? fetchedItems.slice(0, limit) : fetchedItems;
+        setItems(limitedItems);
       } catch (err) {
         setError("Failed to fetch items");
         console.error(err);
       }
     };
     fetchItems();
-  }, [user, itemType, itemId]);
+  }, [user, itemType, itemId, limit]);
 
   // Close the modal if clicking outside its content.
   useOutsideClick(modalRef, () => setActiveItem(null));

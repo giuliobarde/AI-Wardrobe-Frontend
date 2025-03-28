@@ -8,6 +8,7 @@ import { updateProfile } from "@/app/services/userService";
 import { getAllUserItems } from "@/app/services/wardrobeService";
 import ItemCard from "../components/ItemCard";
 import AddItem from "../components/AddItem";
+import { FilePenLine } from "lucide-react";
 
 interface ClothingItem {
   id: string;
@@ -112,22 +113,7 @@ export default function Profile() {
                 className="flex items-center text-purple-600 hover:text-purple-700 transition"
                 title="Edit Profile"
               >
-                {/* Pen Icon */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15.232 5.232l3.536 3.536m-2.036-2.036a2.5 2.5 0 113.536 3.536L10 21H4v-6L16.732 3.732z"
-                  />
-                </svg>
-                <span className="hidden sm:inline">Edit</span>
+                <FilePenLine />
               </button>
             )}
           </div>
@@ -233,7 +219,9 @@ export default function Profile() {
               <AddItem />
             </div>
           ) : (
-            <div className="flex flex-row gap-6 overflow-x-auto">
+            // Use a grid to show all items in one row (if four items) on medium+ screens,
+            // and two items per row on smaller screens.
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {recentItems.map((item) => (
                 <ItemCard key={item.id} itemId={item.id} />
               ))}

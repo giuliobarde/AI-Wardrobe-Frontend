@@ -7,10 +7,40 @@ import Link from "next/link";
 import ItemCard from "../components/ItemCard";
 import AddItem from "../components/AddItem";
 
+// Custom hook to calculate the number of items that can be shown
+// based on screen width.
+function useItemLimit() {
+  const [limit, setLimit] = useState(5);
+
+  useEffect(() => {
+    const updateLimit = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setLimit(3);
+      } else if (width < 768) {
+        setLimit(4);
+      } else if (width < 1024) {
+        setLimit(5);
+      } else if (width < 1280) {
+        setLimit(6);
+      } else {
+        setLimit(7);
+      }
+    };
+
+    updateLimit();
+    window.addEventListener("resize", updateLimit);
+    return () => window.removeEventListener("resize", updateLimit);
+  }, []);
+
+  return limit;
+}
+
 export default function Wardrobe() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const router = useRouter();
+  const itemLimit = useItemLimit();
 
   useEffect(() => {
     if (!user?.access_token) {
@@ -34,9 +64,9 @@ export default function Wardrobe() {
             View All
           </Link>
         </div>
-        <div className="flex space-x-4 overflow-x-auto">
+        <div className="flex flex-nowrap space-x-4 overflow-x-auto">
           <AddItem />
-          <ItemCard itemType="tops" />
+          <ItemCard itemType="tops" limit={itemLimit} />
         </div>
       </section>
 
@@ -50,9 +80,9 @@ export default function Wardrobe() {
             View All
           </Link>
         </div>
-        <div className="flex space-x-4 overflow-x-auto">
+        <div className="flex flex-nowrap space-x-4 overflow-x-auto">
           <AddItem />
-          <ItemCard itemType="bottoms" />
+          <ItemCard itemType="bottoms" limit={itemLimit} />
         </div>
       </section>
 
@@ -66,9 +96,9 @@ export default function Wardrobe() {
             View All
           </Link>
         </div>
-        <div className="flex space-x-4 overflow-x-auto">
+        <div className="flex flex-nowrap space-x-4 overflow-x-auto">
           <AddItem />
-          <ItemCard itemType="shoes" />
+          <ItemCard itemType="shoes" limit={itemLimit} />
         </div>
       </section>
 
@@ -82,9 +112,9 @@ export default function Wardrobe() {
             View All
           </Link>
         </div>
-        <div className="flex space-x-4 overflow-x-auto">
+        <div className="flex flex-nowrap space-x-4 overflow-x-auto">
           <AddItem />
-          <ItemCard itemType="outerware" />
+          <ItemCard itemType="outerware" limit={itemLimit} />
         </div>
       </section>
     </div>
