@@ -67,6 +67,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       axios.defaults.headers.common["Authorization"] = `Bearer ${userData.access_token}`;
       localStorage.setItem("token", userData.access_token);
+      localStorage.setItem("user", JSON.stringify(userData));
       console.log("Access token:", userData.access_token);
       setUser(userData);
       router.push("/Wardrobe");
@@ -90,7 +91,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         last_name: lastName,
         username,
       });
-      // Optionally, automatically log in the user after sign-up
+      // Optionally, automatically log in the user after sign-up.
       await login(email, password);
     } catch (error: any) {
       console.error(
@@ -105,6 +106,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     delete axios.defaults.headers.common["Authorization"];
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     router.push("/");
   };
 
@@ -124,13 +126,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     };
 
-    // Set up event listeners for user activity
+    // Set up event listeners for user activity.
     window.addEventListener("mousemove", resetTimer);
     window.addEventListener("keydown", resetTimer);
     window.addEventListener("click", resetTimer);
     window.addEventListener("scroll", resetTimer);
 
-    // Start the timer immediately
+    // Start the timer immediately.
     resetTimer();
 
     return () => {
@@ -142,13 +144,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, [user, router]);
 
-  // Updated auto-login: only run if user is null.
+  // Auto-login: If the user is not set, attempt to restore the last session from localStorage.
   useEffect(() => {
     if (!user) {
-      const token = localStorage.getItem("token");
-      if (token) {
-        // For now, auto-login with hard-coded credentials.
-        login("soccerstar17@gmail.com", "megmeg");
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        const parsedUser: UserData = JSON.parse(storedUser);
+        setUser(parsedUser);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${parsedUser.access_token}`;
       }
     }
   }, [user]);

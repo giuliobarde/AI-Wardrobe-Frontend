@@ -14,8 +14,8 @@ interface LoginModalProps {
 const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setShowSignup }) => {
     if (!modalOpen) return null;
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState("soccerstar17@gmail.com"); // Switch back to useState("")
+    const [password, setPassword] = useState("megmeg"); // Switch back to useState("")
     
     const [showPassword, setShowPassword] = useState(false);
     const { login } = useAuth();
@@ -53,7 +53,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setSho
                         className="p-2 border rounded"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        required
+                        //required
                     />
                     <div className="relative">
                         <input
@@ -62,18 +62,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setSho
                         className="p-2 border rounded w-full"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        required
+                        //required
                         />
                         <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 flex items-center pr-2"
-                        >
-                        {showPassword ? (
-                            <EyeOff className="w-5 h-5 text-gray-600" />
-                        ) : (
-                            <Eye className="w-5 h-5 text-gray-600" />
-                        )}
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 flex items-center pr-2"
+                            >
+                            {showPassword ? (
+                                <EyeOff className="w-5 h-5 text-gray-600" />
+                            ) : (
+                                <Eye className="w-5 h-5 text-gray-600" />
+                            )}
                         </button>
                     </div>
                     <p 
