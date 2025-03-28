@@ -27,9 +27,10 @@ interface ItemCardProps {
   itemType?: string; // optional if itemId is provided
   itemId?: string;   // optional prop to display a specific item
   limit?: number;    // optional prop to limit number of displayed items
+  refresh?: number;  // added prop to trigger re-fetching when new items are added
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit }) => {
+const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh }) => {
   const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -46,13 +47,13 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit }) => {
       try {
         let fetchedItems: Item[] = [];
         if (itemId) {
-          // Fetch the item by id; no itemType required.
+          // Fetch a specific item by id.
           const response = await displayClothingItemById(user.access_token, itemId);
           if (response?.data) {
-            // Ensure fetchedItems is an array.
             fetchedItems = Array.isArray(response.data) ? response.data : [response.data];
           }
         } else if (itemType) {
+          // Fetch items by type.
           const response = await displayClothingItem(user.access_token, itemType);
           if (response?.data && Array.isArray(response.data)) {
             fetchedItems = response.data;
@@ -61,28 +62,29 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit }) => {
           setError("No item id or item type provided.");
           return;
         }
-        // If a limit is provided, slice the fetched items.
-        const limitedItems = limit ? fetchedItems.slice(0, limit) : fetchedItems;
-        setItems(limitedItems);
+        // Apply limit if provided.
+        if (limit) {
+          fetchedItems = fetchedItems.slice(0, limit);
+        }
+        setItems(fetchedItems);
       } catch (err) {
         setError("Failed to fetch items");
         console.error(err);
       }
     };
+
     fetchItems();
-  }, [user, itemType, itemId, limit]);
+  }, [user, itemType, itemId, limit, refresh]); // refresh added here
 
   // Close the modal if clicking outside its content.
   useOutsideClick(modalRef, () => setActiveItem(null));
 
   const handleDelete = async (itemId: string) => {
     setError(null);
-
     if (!user?.access_token) {
       setError("User authentication failed. Please log in again.");
       return;
     }
-
     try {
       await deleteClothingItem(user.access_token, itemId);
       // Remove the deleted item from the items state.
@@ -136,14 +138,13 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit }) => {
               layoutId={`item-${activeItem.id}-${layoutId}`}
               className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-4"
             >
-              {/* X Button to close the modal */}
               <motion.button
                 onClick={() => setActiveItem(null)}
                 className="absolute top-2 right-2 p-2 text-gray-400 hover:text-gray-900"
               >
                 <X className="w-6 h-6" />
               </motion.button>
-              {activeItem.image && (
+              {activeItem.image ? (
                 <Image
                   src={activeItem.image}
                   alt={activeItem.sub_type}
@@ -151,7 +152,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit }) => {
                   height={300}
                   className="object-cover rounded-lg mx-auto"
                 />
-              )}
+              ) : null}
               <div className="mt-4">
                 <p className="font-bold">Item:</p>
                 <p>

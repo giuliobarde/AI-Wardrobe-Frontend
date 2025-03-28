@@ -7,8 +7,7 @@ import Link from "next/link";
 import ItemCard from "../components/ItemCard";
 import AddItem from "../components/AddItem";
 
-// Custom hook to calculate the number of items that can be shown
-// based on screen width.
+// Custom hook to calculate the number of items that can be shown based on screen width.
 function useItemLimit() {
   const [limit, setLimit] = useState(5);
 
@@ -42,11 +41,19 @@ export default function Wardrobe() {
   const router = useRouter();
   const itemLimit = useItemLimit();
 
+  // refreshKey is used to trigger re-fetching of items in ItemCard.
+  const [refreshKey, setRefreshKey] = useState(0);
+
   useEffect(() => {
     if (!user?.access_token) {
       router.push("/");
     }
   }, [user, router]);
+
+  // Increment refreshKey when an item is added.
+  const handleItemAdded = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-20 px-4">
@@ -65,8 +72,8 @@ export default function Wardrobe() {
           </Link>
         </div>
         <div className="flex flex-nowrap space-x-4 overflow-x-auto">
-          <AddItem />
-          <ItemCard itemType="tops" limit={itemLimit} />
+          <AddItem onItemAdded={handleItemAdded} />
+          <ItemCard itemType="tops" limit={itemLimit} refresh={refreshKey} />
         </div>
       </section>
 
@@ -81,8 +88,8 @@ export default function Wardrobe() {
           </Link>
         </div>
         <div className="flex flex-nowrap space-x-4 overflow-x-auto">
-          <AddItem />
-          <ItemCard itemType="bottoms" limit={itemLimit} />
+          <AddItem onItemAdded={handleItemAdded} />
+          <ItemCard itemType="bottoms" limit={itemLimit} refresh={refreshKey} />
         </div>
       </section>
 
@@ -97,8 +104,8 @@ export default function Wardrobe() {
           </Link>
         </div>
         <div className="flex flex-nowrap space-x-4 overflow-x-auto">
-          <AddItem />
-          <ItemCard itemType="shoes" limit={itemLimit} />
+          <AddItem onItemAdded={handleItemAdded} />
+          <ItemCard itemType="shoes" limit={itemLimit} refresh={refreshKey} />
         </div>
       </section>
 
@@ -113,8 +120,8 @@ export default function Wardrobe() {
           </Link>
         </div>
         <div className="flex flex-nowrap space-x-4 overflow-x-auto">
-          <AddItem />
-          <ItemCard itemType="outerware" limit={itemLimit} />
+          <AddItem onItemAdded={handleItemAdded} />
+          <ItemCard itemType="outerware" limit={itemLimit} refresh={refreshKey} />
         </div>
       </section>
     </div>
