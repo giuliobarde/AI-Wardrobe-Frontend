@@ -5,7 +5,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import { deleteClothingItem, displayClothingItem, displayClothingItemById } from "../services/wardrobeService";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
-import { useOutsideClick } from "@/app/hooks/use-outside-click";
+import { useOutsideClick } from "../hooks/use-outside-click";
 import { X } from "lucide-react";
 
 interface Item {
@@ -27,11 +27,11 @@ interface ItemCardProps {
   itemType?: string; // optional if itemId is provided
   itemId?: string;   // optional prop to display a specific item
   limit?: number;    // optional prop to limit number of displayed items
-  refresh?: number;  // added prop to trigger re-fetching when new items are added
+  refresh?: number;  // triggers re-fetch when updated
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth(); // now using isLoading
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<Item | null>(null);
@@ -40,6 +40,10 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
 
   useEffect(() => {
     const fetchItems = async () => {
+      // If auth state is still loading, do nothing.
+      if (isLoading) return;
+
+      // If there is no authenticated user, then set error.
       if (!user?.access_token) {
         setError("User authentication failed. Please log in again.");
         return;
@@ -47,13 +51,12 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
       try {
         let fetchedItems: Item[] = [];
         if (itemId) {
-          // Fetch a specific item by id.
+          // Fetch the item by id; no itemType required.
           const response = await displayClothingItemById(user.access_token, itemId);
           if (response?.data) {
             fetchedItems = Array.isArray(response.data) ? response.data : [response.data];
           }
         } else if (itemType) {
-          // Fetch items by type.
           const response = await displayClothingItem(user.access_token, itemType);
           if (response?.data && Array.isArray(response.data)) {
             fetchedItems = response.data;
@@ -62,19 +65,17 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
           setError("No item id or item type provided.");
           return;
         }
-        // Apply limit if provided.
-        if (limit) {
-          fetchedItems = fetchedItems.slice(0, limit);
-        }
-        setItems(fetchedItems);
+        // If a limit is provided, slice the fetched items.
+        const limitedItems = limit ? fetchedItems.slice(0, limit) : fetchedItems;
+        setItems(limitedItems);
+        setError(null);
       } catch (err) {
         setError("Failed to fetch items");
         console.error(err);
       }
     };
-
     fetchItems();
-  }, [user, itemType, itemId, limit, refresh]); // refresh added here
+  }, [user, itemType, itemId, limit, refresh, isLoading]);
 
   // Close the modal if clicking outside its content.
   useOutsideClick(modalRef, () => setActiveItem(null));

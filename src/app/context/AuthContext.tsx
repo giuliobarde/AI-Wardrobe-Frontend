@@ -18,6 +18,7 @@ export interface UserData {
 
 export interface AuthContextType {
   user: UserData | null;
+  isLoading: boolean;
   setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
   login: (email: string, password: string) => Promise<void>;
   signup: (
@@ -38,6 +39,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   const login = async (email: string, password: string) => {
@@ -122,17 +124,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const resetTimer = () => {
       if (user) {
         clearTimeout(timeoutId);
-        timeoutId = setTimeout(handleSessionTimeout, 20 * 60 * 1000); // 20 minutes in ms
+        timeoutId = setTimeout(handleSessionTimeout, 20 * 60 * 1000); // 20 minutes
       }
     };
 
-    // Set up event listeners for user activity.
     window.addEventListener("mousemove", resetTimer);
     window.addEventListener("keydown", resetTimer);
     window.addEventListener("click", resetTimer);
     window.addEventListener("scroll", resetTimer);
 
-    // Start the timer immediately.
     resetTimer();
 
     return () => {
@@ -154,10 +154,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         axios.defaults.headers.common["Authorization"] = `Bearer ${parsedUser.access_token}`;
       }
     }
+    // Mark loading as complete once auto-login is attempted.
+    setIsLoading(false);
   }, [user]);
 
+  // Only redirect if not loading and no user.
+  useEffect(() => {
+    if (!isLoading && !user?.access_token) {
+      router.push("/");
+    }
+  }, [user, router, isLoading]);
+
   return (
-    <AuthContext.Provider value={{ user, setUser, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, setUser, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

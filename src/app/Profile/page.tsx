@@ -9,6 +9,7 @@ import { getAllUserItems } from "@/app/services/wardrobeService";
 import ItemCard from "../components/ItemCard";
 import AddItem from "../components/AddItem";
 import { FilePenLine } from "lucide-react";
+import ErrorModal from "@/app/components/ErrorModal";
 
 interface ClothingItem {
   id: string;
@@ -16,7 +17,7 @@ interface ClothingItem {
 }
 
 export default function Profile() {
-  const { user, setUser } = useAuth();
+  const { user, isLoading, setUser } = useAuth();
   const router = useRouter();
 
   // States for editing profile info.
@@ -32,12 +33,12 @@ export default function Profile() {
   const [loadingItems, setLoadingItems] = useState(false);
   const [itemsError, setItemsError] = useState("");
 
-  // Redirect if user is not signed in.
+  // Redirect if user is not signed in and auth is not loading.
   useEffect(() => {
-    if (!user?.access_token) {
+    if (!isLoading && !user?.access_token) {
       router.push("/");
     }
-  }, [user, router]);
+  }, [user, router, isLoading]);
 
   // Update form fields when user data changes.
   useEffect(() => {
@@ -100,6 +101,17 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 bg-gray-50">
+      {/* Error Modal */}
+      {(updateError || itemsError) && (
+        <ErrorModal
+          error={updateError || itemsError}
+          onClose={() => {
+            setUpdateError("");
+            setItemsError("");
+          }}
+        />
+      )}
+
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Profile Card */}
         <div className="bg-white shadow-xl rounded-xl p-8">
@@ -216,11 +228,10 @@ export default function Profile() {
               <p className="text-center text-gray-600 mb-4">
                 You haven't added any items yet.
               </p>
-              <AddItem />
+              <AddItem onItemAdded={() => {}} />
             </div>
           ) : (
-            // Use a grid to show all items in one row (if four items) on medium+ screens,
-            // and two items per row on smaller screens.
+            // Use a grid to display items.
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {recentItems.map((item) => (
                 <ItemCard key={item.id} itemId={item.id} />
