@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { addClothingItem } from "../services/wardrobeService";
 import { X, Plus } from "lucide-react";
@@ -164,6 +164,18 @@ export default function AddItem({ onItemAdded }: AddItemProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   useOutsideClick(modalRef, () => closeModal());
 
+  // Disable body scrolling when modal is open.
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [modalOpen]);
+
   // Dropdown states
   const [itemType, setItemType] = useState("");
   const [subType, setSubType] = useState("");
@@ -293,7 +305,7 @@ export default function AddItem({ onItemAdded }: AddItemProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+            className="fixed top-0 left-0 w-screen h-screen flex items-center justify-center bg-black/50 z-50"
             onClick={() => closeModal()}
           >
             <motion.div
