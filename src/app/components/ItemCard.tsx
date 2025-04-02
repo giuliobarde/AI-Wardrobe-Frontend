@@ -7,6 +7,7 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "../hooks/use-outside-click";
 import { X } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 interface Item {
   id: string;
@@ -37,6 +38,9 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
   const [activeItem, setActiveItem] = useState<Item | null>(null);
   const layoutId = useId(); // used for motion layout
   const modalRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  const normalizedPath = pathname !== "/" && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -178,12 +182,14 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
                   <span className="font-semibold">Suitable for Weather:</span> {activeItem.suitable_for_weather}
                 </p>
               </div>
-              <button
-                onClick={() => handleDelete(activeItem.id)}
-                className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
-              >
-                Delete item
-              </button>
+              {pathname !== "/Outfits" && (
+                <button
+                  onClick={() => handleDelete(activeItem.id)}
+                  className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
+                >
+                  Delete item
+                </button>
+              )}
             </motion.div>
           </motion.div>
         )}
