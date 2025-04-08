@@ -21,7 +21,7 @@ interface Item {
   suitable_for_weather: string;
   suitable_for_occasion: string;
   sub_type: string;
-  image?: string;
+  image_link?: string;
 }
 
 interface ItemCardProps {
@@ -111,9 +111,9 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
             onClick={() => setActiveItem(item)}
             className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
           >
-            {item.image ? (
+            {item.image_link ? (
               <Image
-                src={item.image}
+                src={item.image_link}
                 alt={item.sub_type}
                 width={150}
                 height={150}
@@ -149,9 +149,9 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
               >
                 <X className="w-6 h-6" />
               </motion.button>
-              {activeItem.image ? (
+              {activeItem.image_link ? (
                 <Image
-                  src={activeItem.image}
+                  src={activeItem.image_link}
                   alt={activeItem.sub_type}
                   width={300}
                   height={300}
