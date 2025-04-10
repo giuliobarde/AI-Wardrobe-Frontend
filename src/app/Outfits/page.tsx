@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import ItemCard from "../components/ItemCard";
-import { addSavedOutfit, getSavedOutfits } from "@/app/services/outfitServices";
+import { addSavedOutfit } from "@/app/services/outfitServices";
 import { useRouter } from "next/navigation";
 import CreateOutfit from "../components/CreateOutfit";
-
+import { generateChatOutfit } from "../services/openAIServices";
+import OutfitCard from "../components/OutfitCard";
+import ItemCard from "../components/ItemCard";
 
 export default function OutfitsPage() {
   const [occasion, setOccasion] = useState("");
@@ -14,26 +15,10 @@ export default function OutfitsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showCreateOutfitModal, setShowCreateOutfitModal] = useState(false);
-  const [savedOutfits, setSavedOutfits] = useState<any[]>([]);
+  // Use a refresh counter to force re-fetching saved outfits in OutfitCard
+  const [refreshOutfits, setRefreshOutfits] = useState(0);
   const { user } = useAuth();
   const router = useRouter();
-
-  // Function to fetch saved outfits
-  const fetchSavedOutfits = async () => {
-    if (user?.access_token) {
-      try {
-        const outfits = await getSavedOutfits(user.access_token);
-        setSavedOutfits(outfits);
-      } catch (err) {
-        console.error("Failed to fetch saved outfits:", err);
-      }
-    }
-  };
-
-  useEffect(() => {
-    // Fetch saved outfits when the component mounts
-    fetchSavedOutfits();
-  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,21 +26,14 @@ export default function OutfitsPage() {
     setOutfit(null);
     setError("");
 
+    if (!user?.access_token) {
+      setError("Access token not found. Please log in again.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch("http://localhost:8000/chat/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${user?.access_token}`,
-        },
-        body: JSON.stringify({ user_message: occasion, temp: "20C" }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const data = await response.json();
+      const data = await generateChatOutfit(user.access_token, occasion);
       setOutfit(data.response);
     } catch (err: any) {
       console.error(err);
@@ -70,6 +48,7 @@ export default function OutfitsPage() {
       return;
     }
 
+    // Prepare the outfit items based on the response structure
     const outfitItems = outfit.outfit_items.map((item: any) => ({
       id: item.id,
       type: item.item_type || "unknown"
@@ -85,8 +64,8 @@ export default function OutfitsPage() {
     try {
       if (user?.access_token) {
         await addSavedOutfit(outfitData, user.access_token);
-        // Refresh saved outfits list after saving
-        fetchSavedOutfits();
+        // Trigger a refresh for the saved outfits display
+        setRefreshOutfits((prev) => prev + 1);
       }
     } catch (err) {
       console.error("Failed to save generated outfit:", err);
@@ -94,13 +73,14 @@ export default function OutfitsPage() {
     }
   };
 
+  // Called when a new outfit is added via the CreateOutfit modal
   const handleOutfitAdded = () => {
-    // Refresh the saved outfits list when a new outfit is added
-    fetchSavedOutfits();
+    setRefreshOutfits((prev) => prev + 1);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4">
+      {/* Outfit Generation Section */}
       <div className="w-full max-w-md mt-20">
         <div className="bg-white shadow-lg rounded-xl p-6">
           <h1 className="text-4xl font-bold mb-6 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
@@ -127,6 +107,7 @@ export default function OutfitsPage() {
         </div>
       </div>
 
+      {/* Generated Outfit Display */}
       {outfit && (
         <div className="w-full max-w-3xl mt-10">
           <div className="bg-white shadow-lg rounded-xl p-8">
@@ -177,25 +158,11 @@ export default function OutfitsPage() {
         </div>
       )}
 
-      {/* Saved Outfits Section */}
-      {savedOutfits.length > 0 && (
-        <div className="w-full max-w-3xl mt-10">
-          <h2 className="text-2xl font-bold mb-4 text-center">Your Saved Outfits</h2>
-          <div className="grid grid-cols-1 gap-4">
-            {savedOutfits.map((savedOutfit, index) => (
-              <div key={index} className="bg-white shadow-md rounded-lg p-4">
-                <h3 className="text-xl font-semibold">{savedOutfit.occasion}</h3>
-                <div className="mt-2">
-                  <p className="text-gray-700">
-                    {savedOutfit.items.length} items • {savedOutfit.favourite ? "★ Favorite" : "Not favorite"}
-                  </p>
-                </div>
-                {/* You could add a button to view full outfit details here */}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Saved Outfits Section Using the OutfitCard Component */}
+      <div className="w-full max-w-3xl mt-10">
+        <h2 className="text-2xl font-bold mb-4 text-center">Your Saved Outfits</h2>
+        <OutfitCard refresh={refreshOutfits} />
+      </div>
 
       {/* Button to open the "Create New Outfit" modal */}
       <div className="mt-10 mb-10">
