@@ -2,19 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import Link from "next/link";
 import ItemCard from "../components/ItemCard";
-import { getAllUserItems } from "@/app/services/wardrobeService";
-import { addSavedOutfit } from "@/app/services/outfitServices";
+import { addSavedOutfit, getSavedOutfits } from "@/app/services/outfitServices";
 import { useRouter } from "next/navigation";
 import CreateOutfit from "../components/CreateOutfit";
 
-interface ClothingItem {
-  id: string;
-  added_date?: string;
-  sub_type?: string;
-  color?: string;
-}
 
 export default function OutfitsPage() {
   const [occasion, setOccasion] = useState("");
@@ -30,16 +22,8 @@ export default function OutfitsPage() {
   const fetchSavedOutfits = async () => {
     if (user?.access_token) {
       try {
-        const response = await fetch("http://localhost:8000/get_saved_outfits/", {
-          headers: {
-            "Authorization": `Bearer ${user.access_token}`,
-          },
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setSavedOutfits(data.data || []);
-        }
+        const outfits = await getSavedOutfits(user.access_token);
+        setSavedOutfits(outfits);
       } catch (err) {
         console.error("Failed to fetch saved outfits:", err);
       }

@@ -20,3 +20,20 @@ export const addSavedOutfit = async (outfit: any, token: string) => {
         throw error;
     }
 };
+
+export const getSavedOutfits = async (token: string) => {
+    try {
+        const response = await axios.get(
+          `${API_BASE_URL}/get_saved_outfits/`,
+          {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+            },
+          }
+        );
+        return response.data.data || [];
+    } catch (error: any) {
+        console.error("Failed to retrieve all outfits:", error.response ? error.response.data : error.message);
+        throw error;
+    }
+};

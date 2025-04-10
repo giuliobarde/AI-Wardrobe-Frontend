@@ -58,22 +58,22 @@ export const displayClothingItemById = async (token: string, itemId: string) => 
 };
 
 export const getAllUserItems = async (token: string) => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/clothing_items/all/`,
-        {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error("Failed to retrieve all clothing items:", error.response ? error.response.data : error.message);
-      throw error;
-    }
-  };
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/clothing_items/all/`,
+      {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Failed to retrieve all clothing items:", error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
 
 export const deleteClothingItem = async (token: string, item: string) => {
   try {
