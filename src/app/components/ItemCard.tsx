@@ -25,18 +25,19 @@ interface Item {
 }
 
 interface ItemCardProps {
-  itemType?: string; // optional if itemId is provided
-  itemId?: string;   // optional prop to display a specific item
-  limit?: number;    // optional prop to limit number of displayed items
-  refresh?: number;  // triggers re-fetch when updated
+  itemType?: string;
+  itemId?: string;
+  limit?: number;
+  refresh?: number;
+  thumbnail?: boolean;
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh }) => {
-  const { user, isLoading } = useAuth(); // now using isLoading
+const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh, thumbnail }) => {
+  const { user, isLoading } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<Item | null>(null);
-  const layoutId = useId(); // used for motion layout
+  const layoutId = useId();
   const modalRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -44,10 +45,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
 
   useEffect(() => {
     const fetchItems = async () => {
-      // If auth state is still loading, do nothing.
       if (isLoading) return;
-
-      // If there is no authenticated user, then set error.
       if (!user?.access_token) {
         setError("User authentication failed. Please log in again.");
         return;
@@ -55,7 +53,6 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
       try {
         let fetchedItems: Item[] = [];
         if (itemId) {
-          // Fetch the item by id; no itemType required.
           const response = await displayClothingItemById(user.access_token, itemId);
           if (response?.data) {
             fetchedItems = Array.isArray(response.data) ? response.data : [response.data];
@@ -69,7 +66,6 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
           setError("No item id or item type provided.");
           return;
         }
-        // If a limit is provided, slice the fetched items.
         const limitedItems = limit ? fetchedItems.slice(0, limit) : fetchedItems;
         setItems(limitedItems);
         setError(null);
@@ -81,7 +77,6 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
     fetchItems();
   }, [user, itemType, itemId, limit, refresh, isLoading]);
 
-  // Close the modal if clicking outside its content.
   useOutsideClick(modalRef, () => setActiveItem(null));
 
   const handleDelete = async (itemId: string) => {
@@ -92,7 +87,6 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
     }
     try {
       await deleteClothingItem(user.access_token, itemId);
-      // Remove the deleted item from the items state.
       setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
       setActiveItem(null);
     } catch (err) {
@@ -109,14 +103,16 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
           <motion.div
             key={item.id}
             onClick={() => setActiveItem(item)}
-            className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
+            className={`min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer ${
+              !thumbnail /* && !item.image_link */ ? "hover:bg-gray-100" : ""
+            }`}
           >
             {item.image_link ? (
               <Image
                 src={item.image_link}
                 alt={item.sub_type}
-                width={150}
-                height={150}
+                width={thumbnail ? 50 : 150}
+                height={thumbnail ? 50 : 150}
                 className="object-cover rounded-lg"
               />
             ) : (
@@ -131,7 +127,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh })
 
       {/* Expanded Modal */}
       <AnimatePresence>
-        {activeItem && (
+        {activeItem && !thumbnail && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

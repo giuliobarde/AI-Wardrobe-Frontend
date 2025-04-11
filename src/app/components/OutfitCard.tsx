@@ -9,7 +9,7 @@ import { X, Heart } from "lucide-react";
 import ItemCard from "./ItemCard";
 
 interface OutfitItem {
-  item_id?: string; // optional in case the API returns "id" instead
+  item_id?: string;
   id?: string;
   type: string;
 }
@@ -24,8 +24,8 @@ interface Outfit {
 }
 
 interface OutfitCardProps {
-  limit?: number;    // optional prop to limit number of displayed outfits
-  refresh?: number;  // triggers re-fetch when updated
+  limit?: number;
+  refresh?: number;
 }
 
 const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
@@ -39,14 +39,12 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
   useEffect(() => {
     const fetchOutfits = async () => {
       if (isLoading) return;
-
       if (!user?.access_token) {
         setError("User authentication failed. Please log in again.");
         return;
       }
       try {
         const response = await getSavedOutfits(user.access_token);
-        // Adjust based on how your API returns data:
         let outfitsData: Outfit[] = [];
         if (Array.isArray(response)) {
           outfitsData = response;
@@ -111,7 +109,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
               </p>
 
               <div className="flex flex-wrap gap-2">
-                {/* Render up to 4 item thumbnails using ItemCard */}
+                {/* Render up to 4 item thumbnails using ItemCard with thumbnail prop */}
                 {outfit.items.slice(0, 4).map((item, index) => {
                   const validItemId = getItemId(item);
                   return (
@@ -120,7 +118,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
                       className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden"
                     >
                       {validItemId ? (
-                        <ItemCard itemId={validItemId} limit={1} />
+                        <ItemCard itemId={validItemId} limit={1} thumbnail={true} />
                       ) : (
                         <span className="text-xs text-red-500">N/A</span>
                       )}

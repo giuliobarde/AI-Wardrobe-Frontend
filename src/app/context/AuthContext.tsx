@@ -114,35 +114,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Inactivity timer: reset timer on user activity and log out after 20 minutes of inactivity.
   useEffect(() => {
+    // Only run this effect once the user is available.
+    if (!user) return;
+  
     let timeoutId: ReturnType<typeof setTimeout>;
-
+  
     const handleSessionTimeout = () => {
       logout();
       router.push("/?sessionExpired=true");
     };
-
+  
     const resetTimer = () => {
-      if (user) {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(handleSessionTimeout, 20 * 60 * 1000); // 20 minutes
-      }
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleSessionTimeout, 20 * 60 * 1000); // 20 minutes
     };
-
-    window.addEventListener("mousemove", resetTimer);
-    window.addEventListener("keydown", resetTimer);
-    window.addEventListener("click", resetTimer);
-    window.addEventListener("scroll", resetTimer);
-
+  
+    // List of events to reset the timer.
+    const events = ["mousemove", "keydown", "click", "scroll"];
+    events.forEach((event) => window.addEventListener(event, resetTimer));
+  
+    // Initialize the timer.
     resetTimer();
-
+  
     return () => {
       clearTimeout(timeoutId);
-      window.removeEventListener("mousemove", resetTimer);
-      window.removeEventListener("keydown", resetTimer);
-      window.removeEventListener("click", resetTimer);
-      window.removeEventListener("scroll", resetTimer);
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
-  }, [user, router]);
+  }, [user]); 
 
   // Auto-login: If the user is not set, attempt to restore the last session from localStorage.
   useEffect(() => {
