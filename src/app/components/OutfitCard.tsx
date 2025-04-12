@@ -2,10 +2,10 @@
 
 import React, { useEffect, useRef, useState, useId } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { getSavedOutfits } from "../services/outfitServices";
+import { getSavedOutfits, deleteSavedOutfit, favouriteUpdateSavedOutfit } from "../services/outfitServices";
 import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "../hooks/use-outside-click";
-import { X, Heart } from "lucide-react";
+import { X, Star } from "lucide-react";
 import ItemCard from "./ItemCard";
 
 interface OutfitItem {
@@ -74,9 +74,50 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
       .join(' ');
   };
 
-  // Helper to return a valid ID from an outfit item
+  // Helper to return a valid ID from an outfit item.
   const getItemId = (item: OutfitItem) => {
     return item.item_id || item.id || "";
+  };
+
+  // Function to toggle the favourite status.
+  const handleToggleFavourite = async (outfitId: string) => {
+    if (!user?.access_token) {
+      setError("User authentication failed. Please log in again.");
+      return;
+    }
+    try {
+      await favouriteUpdateSavedOutfit({ id: outfitId }, user.access_token);
+      setOutfits((prevOutfits) =>
+        prevOutfits.map((o) =>
+          o.id === outfitId ? { ...o, favourite: !o.favourite } : o
+        )
+      );
+      if (activeOutfit && activeOutfit.id === outfitId) {
+        setActiveOutfit({ ...activeOutfit, favourite: !activeOutfit.favourite });
+      }
+    } catch (err) {
+      console.error("Failed to toggle favourite:", err);
+      setError("Failed to update favourite status.");
+    }
+  };
+
+  // Function to delete the currently active outfit.
+  const handleDeleteOutfit = async () => {
+    if (!activeOutfit) return;
+    if (!user?.access_token) {
+      setError("User authentication failed. Please log in again.");
+      return;
+    }
+    try {
+      await deleteSavedOutfit({ id: activeOutfit.id }, user.access_token);
+      setOutfits((prevOutfits) =>
+        prevOutfits.filter((outfit) => outfit.id !== activeOutfit.id)
+      );
+      setActiveOutfit(null);
+    } catch (err) {
+      console.error("Failed to delete outfit:", err);
+      setError("Failed to delete outfit.");
+    }
   };
 
   return (
@@ -92,16 +133,26 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
           <motion.div
             key={outfit.id}
             onClick={() => setActiveOutfit(outfit)}
-            className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer"
+            className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer relative"
           >
             <div className="p-4">
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-center mb-2">
                 <h3 className="text-lg font-semibold text-gray-800">
                   {formatOccasion(outfit.occasion)}
                 </h3>
-                {outfit.favourite && (
-                  <Heart className="h-5 w-5 text-red-500 fill-red-500" />
-                )}
+                {/* Clickable Star Icon */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleFavourite(outfit.id);
+                  }}
+                >
+                  {outfit.favourite ? (
+                    <Star className="h-5 w-5 text-yellow-500" />
+                  ) : (
+                    <Star className="h-5 w-5 text-gray-300" />
+                  )}
+                </button>
               </div>
 
               <p className="text-sm text-gray-600 mb-3">
@@ -109,7 +160,6 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
               </p>
 
               <div className="flex flex-wrap gap-2">
-                {/* Render up to 4 item thumbnails using ItemCard with thumbnail prop */}
                 {outfit.items.slice(0, 4).map((item, index) => {
                   const validItemId = getItemId(item);
                   return (
@@ -118,7 +168,11 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
                       className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden"
                     >
                       {validItemId ? (
-                        <ItemCard itemId={validItemId} limit={1} thumbnail={true} />
+                        <ItemCard
+                          itemId={validItemId}
+                          limit={1}
+                          thumbnail={true}
+                        />
                       ) : (
                         <span className="text-xs text-red-500">N/A</span>
                       )}
@@ -126,7 +180,6 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
                   );
                 })}
 
-                {/* Indicator for additional items */}
                 {outfit.items.length > 4 && (
                   <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center">
                     <span className="text-xs font-medium text-gray-600">
@@ -166,20 +219,32 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
                   <h2 className="text-2xl font-bold text-gray-800">
                     {formatOccasion(activeOutfit.occasion)} Outfit
                   </h2>
-                  {activeOutfit.favourite && (
-                    <Heart className="h-6 w-6 text-red-500 fill-red-500" />
-                  )}
+                  {/* Star Icon in Modal */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleFavourite(activeOutfit.id);
+                    }}
+                  >
+                    {activeOutfit.favourite ? (
+                      <Star className="h-6 w-6 text-yellow-500" />
+                    ) : (
+                      <Star className="h-6 w-6 text-gray-300" />
+                    )}
+                  </button>
                 </div>
 
                 {activeOutfit.created_at && (
                   <p className="text-sm text-gray-500 mb-6">
-                    Created: {new Date(activeOutfit.created_at).toLocaleDateString()}
+                    Created:{" "}
+                    {new Date(activeOutfit.created_at).toLocaleDateString()}
                   </p>
                 )}
 
                 <div className="mt-6">
-                  <h3 className="text-lg font-medium mb-4 text-gray-700">Items in this outfit:</h3>
-                  {/* Horizontally scrollable list displaying each item as an ItemCard */}
+                  <h3 className="text-lg font-medium mb-4 text-gray-700">
+                    Items in this outfit:
+                  </h3>
                   <div className="flex gap-4 overflow-x-auto pb-4">
                     {activeOutfit.items.map((item, index) => {
                       const validItemId = getItemId(item);
@@ -197,6 +262,16 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
                       );
                     })}
                   </div>
+                </div>
+
+                {/* Delete Outfit Button */}
+                <div className="flex justify-end mt-4">
+                  <button
+                    onClick={handleDeleteOutfit}
+                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                  >
+                    Delete Outfit
+                  </button>
                 </div>
               </div>
             </motion.div>
