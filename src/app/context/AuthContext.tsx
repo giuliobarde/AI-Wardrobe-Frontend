@@ -31,6 +31,7 @@ export interface AuthContextType {
   logout: () => void;
 }
 
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
@@ -112,37 +113,54 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     router.push("/");
   };
 
-  // Inactivity timer: reset timer on user activity and log out after 20 minutes of inactivity.
+  // Inactivity timer using the Page Visibility API.
   useEffect(() => {
-    // Only run this effect once the user is available.
-    if (!user) return;
-  
+    if (!user) return; // Only activate when user is logged in.
+
     let timeoutId: ReturnType<typeof setTimeout>;
-  
+    const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes in milliseconds
+
     const handleSessionTimeout = () => {
       logout();
       router.push("/?sessionExpired=true");
     };
-  
+
     const resetTimer = () => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleSessionTimeout, 20 * 60 * 1000); // 20 minutes
+      timeoutId = setTimeout(handleSessionTimeout, SESSION_TIMEOUT);
     };
-  
-    // List of events to reset the timer.
-    const events = ["mousemove", "keydown", "click", "scroll"];
-    events.forEach((event) => window.addEventListener(event, resetTimer));
-  
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        // Store the time when the page goes hidden.
+        localStorage.setItem("lastActive", Date.now().toString());
+        clearTimeout(timeoutId);
+      } else if (document.visibilityState === "visible") {
+        // When the page is visible, check how long it was hidden.
+        const lastActive = localStorage.getItem("lastActive");
+        if (lastActive) {
+          const elapsed = Date.now() - parseInt(lastActive);
+          if (elapsed > SESSION_TIMEOUT) {
+            // If hidden longer than SESSION_TIMEOUT, log out.
+            handleSessionTimeout();
+            return;
+          }
+        }
+        resetTimer();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     // Initialize the timer.
     resetTimer();
-  
+
     return () => {
       clearTimeout(timeoutId);
-      events.forEach((event) => window.removeEventListener(event, resetTimer));
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [user]); 
+  }, [user, router]);
 
-  // Auto-login: If the user is not set, attempt to restore the last session from localStorage.
+  // Auto-login: restore session if available.
   useEffect(() => {
     if (!user) {
       const storedUser = localStorage.getItem("user");
@@ -152,7 +170,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         axios.defaults.headers.common["Authorization"] = `Bearer ${parsedUser.access_token}`;
       }
     }
-    // Mark loading as complete once auto-login is attempted.
     setIsLoading(false);
   }, [user]);
 

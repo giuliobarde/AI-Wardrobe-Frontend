@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useId } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { getSavedOutfits, deleteSavedOutfit, favouriteUpdateSavedOutfit } from "../services/outfitServices";
+import { getSavedOutfits, deleteSavedOutfit, favoriteUpdateSavedOutfit } from "../services/outfitServices";
 import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "../hooks/use-outside-click";
 import { X, Star } from "lucide-react";
@@ -19,7 +19,7 @@ interface Outfit {
   user_id: string;
   items: OutfitItem[];
   occasion: string;
-  favourite: boolean;
+  favorite: boolean;
   created_at?: string;
 }
 
@@ -79,25 +79,25 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
     return item.item_id || item.id || "";
   };
 
-  // Function to toggle the favourite status.
-  const handleToggleFavourite = async (outfitId: string) => {
+  // Function to toggle the favorite status.
+  const handleToggleFavorite = async (outfitId: string) => {
     if (!user?.access_token) {
       setError("User authentication failed. Please log in again.");
       return;
     }
     try {
-      await favouriteUpdateSavedOutfit({ id: outfitId }, user.access_token);
+      await favoriteUpdateSavedOutfit({ id: outfitId }, user.access_token);
       setOutfits((prevOutfits) =>
         prevOutfits.map((o) =>
-          o.id === outfitId ? { ...o, favourite: !o.favourite } : o
+          o.id === outfitId ? { ...o, favorite: !o.favorite } : o
         )
       );
       if (activeOutfit && activeOutfit.id === outfitId) {
-        setActiveOutfit({ ...activeOutfit, favourite: !activeOutfit.favourite });
+        setActiveOutfit({ ...activeOutfit, favorite: !activeOutfit.favorite });
       }
     } catch (err) {
-      console.error("Failed to toggle favourite:", err);
-      setError("Failed to update favourite status.");
+      console.error("Failed to toggle favorite:", err);
+      setError("Failed to update favorite status.");
     }
   };
 
@@ -144,13 +144,13 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleToggleFavourite(outfit.id);
+                    handleToggleFavorite(outfit.id);
                   }}
                 >
-                  {outfit.favourite ? (
-                    <Star className="h-5 w-5 text-yellow-500" />
+                  {outfit.favorite ? (
+                    <Star fill="currentColor" className="h-5 w-5 text-yellow-500" />
                   ) : (
-                    <Star className="h-5 w-5 text-gray-300" />
+                    <Star fill="none" className="h-5 w-5 text-gray-300" />
                   )}
                 </button>
               </div>
@@ -202,10 +202,11 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
           >
+            {/* Added top padding "pt-12" to ensure modal content starts lower */}
             <motion.div
               ref={modalRef}
               layoutId={`outfit-${activeOutfit.id}-${layoutId}`}
-              className="relative bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+              className="relative bg-white pt-12 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setActiveOutfit(null)}
@@ -223,13 +224,13 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleToggleFavourite(activeOutfit.id);
+                      handleToggleFavorite(activeOutfit.id);
                     }}
                   >
-                    {activeOutfit.favourite ? (
-                      <Star className="h-6 w-6 text-yellow-500" />
+                    {activeOutfit.favorite ? (
+                      <Star fill="currentColor" className="h-6 w-6 text-yellow-500" />
                     ) : (
-                      <Star className="h-6 w-6 text-gray-300" />
+                      <Star fill="none" className="h-6 w-6 text-gray-300" />
                     )}
                   </button>
                 </div>
