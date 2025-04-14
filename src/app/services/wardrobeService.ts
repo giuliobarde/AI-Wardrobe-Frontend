@@ -79,7 +79,7 @@ export const deleteClothingItem = async (token: string, item: string) => {
   try {
     const response = await axios.post(
       `${API_BASE_URL}/delete_clothing_item/`,
-      { item_id: item },
+      { id: item },
       {
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -89,8 +89,10 @@ export const deleteClothingItem = async (token: string, item: string) => {
     );
     return response.data;
   } catch (error: any) {
-    console.error("Failed to delete clothing item:", error.response ? error.response.data : error.message);
+    console.error(
+      "Failed to delete clothing item:",
+      error.response ? error.response.data : error.message
+    );
     throw error;
   }
 };
-
