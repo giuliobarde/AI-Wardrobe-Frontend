@@ -75,11 +75,41 @@ export const getAllUserItems = async (token: string) => {
   }
 };
 
-export const deleteClothingItem = async (token: string, item: string) => {
+export const deleteClothingItem = async (
+  token: string,
+  itemId: string,
+  deleteOutfits = false
+) => {
   try {
+    // add query param if we need to cascade-delete outfits
+    const url = `${API_BASE_URL}/delete_clothing_item/${
+      deleteOutfits ? "?delete_outfits=true" : ""
+    }`;
+
     const response = await axios.post(
-      `${API_BASE_URL}/delete_clothing_item/`,
-      { id: item },
+      url,
+      { id: itemId },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Failed to delete clothing item:",
+      error.response ? error.response.data : error.message
+    );
+    throw error;
+  }
+};
+
+export const checkItemInOutfits = async (token: string, itemId: string) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/check_item_in_outfits/?item_id=${encodeURIComponent(itemId)}`,
       {
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -90,7 +120,7 @@ export const deleteClothingItem = async (token: string, item: string) => {
     return response.data;
   } catch (error: any) {
     console.error(
-      "Failed to delete clothing item:",
+      "Failed to check item in outfits:",
       error.response ? error.response.data : error.message
     );
     throw error;

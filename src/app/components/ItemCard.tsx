@@ -2,12 +2,18 @@
 
 import React, { useEffect, useRef, useState, useId } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { deleteClothingItem, displayClothingItem, displayClothingItemById } from "../services/wardrobeService";
+import {
+  deleteClothingItem,
+  displayClothingItem,
+  displayClothingItemById,
+  checkItemInOutfits,
+} from "../services/wardrobeService";
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "../hooks/use-outside-click";
 import { X } from "lucide-react";
 import { usePathname } from "next/navigation";
+import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
 interface Item {
   id: string;
@@ -32,7 +38,13 @@ interface ItemCardProps {
   thumbnail?: boolean;
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh, thumbnail }) => {
+const ItemCard: React.FC<ItemCardProps> = ({
+  itemType,
+  itemId,
+  limit,
+  refresh,
+  thumbnail,
+}) => {
   const { user, isLoading } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +53,12 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh, t
   const modalRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
-  const normalizedPath = pathname !== "/" && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  // Delete flow state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [outfitsCount, setOutfitsCount] = useState(0);
+
+  useOutsideClick(modalRef, () => setActiveItem(null));
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -53,46 +70,92 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh, t
       try {
         let fetchedItems: Item[] = [];
         if (itemId) {
-          const response = await displayClothingItemById(user.access_token, itemId);
-          if (response?.data) {
-            fetchedItems = Array.isArray(response.data) ? response.data : [response.data];
-          }
+          const res = await displayClothingItemById(user.access_token, itemId);
+          fetchedItems = res.data
+            ? Array.isArray(res.data)
+              ? res.data
+              : [res.data]
+            : [];
         } else if (itemType) {
-          const response = await displayClothingItem(user.access_token, itemType);
-          if (response?.data && Array.isArray(response.data)) {
-            fetchedItems = response.data;
-          }
+          const res = await displayClothingItem(
+            user.access_token,
+            itemType
+          );
+          fetchedItems = res.data ?? [];
         } else {
           setError("No item id or item type provided.");
           return;
         }
-        const limitedItems = limit ? fetchedItems.slice(0, limit) : fetchedItems;
-        setItems(limitedItems);
+        setItems(limit ? fetchedItems.slice(0, limit) : fetchedItems);
         setError(null);
-      } catch (err) {
+      } catch {
         setError("Failed to fetch items");
-        console.error(err);
       }
     };
     fetchItems();
   }, [user, itemType, itemId, limit, refresh, isLoading]);
 
-  useOutsideClick(modalRef, () => setActiveItem(null));
+  const checkItemOutfits = async (itemId: string): Promise<number> => {
+    if (!user?.access_token) {
+      throw new Error("User authentication failed. Please log in again.");
+    }
+    const resp = await checkItemInOutfits(user.access_token, itemId);
+    return resp.data.length;
+  };
 
-  const handleDelete = async (itemId: string) => {
+  const initiateDelete = async (itemId: string) => {
+    if (!user?.access_token) {
+      setError("User authentication failed. Please log in again.");
+      return;
+    }
+
+    try {
+      const count = await checkItemOutfits(itemId);
+      if (count > 0) {
+        setOutfitsCount(count);
+        setItemToDelete(itemId);
+        setShowDeleteModal(true);
+      } else {
+        performDelete(itemId);
+      }
+    } catch (err) {
+      console.error("Check failed:", err);
+      setError("Could not verify whether this item is in any outfits.");
+    }
+  };
+
+  const performDelete = async (
+    itemId: string,
+    deleteOutfits = false
+  ) => {
     setError(null);
     if (!user?.access_token) {
       setError("User authentication failed. Please log in again.");
       return;
     }
     try {
-      await deleteClothingItem(user.access_token, itemId);
-      setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+      await deleteClothingItem(
+        user.access_token,
+        itemId,
+        deleteOutfits
+      );
+      setItems((prev) => prev.filter((i) => i.id !== itemId));
       setActiveItem(null);
-    } catch (err) {
+    } catch {
       setError("Failed to delete item");
-      console.error(err);
     }
+  };
+
+  // Now accepts the item ID explicitly
+  const handleConfirmDelete = (id: string) => {
+    performDelete(id, true);
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setItemToDelete(null);
   };
 
   return (
@@ -104,7 +167,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh, t
             key={item.id}
             onClick={() => setActiveItem(item)}
             className={`min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer ${
-              !thumbnail /* && !item.image_link */ ? "hover:bg-gray-100" : ""
+              !thumbnail ? "hover:bg-gray-100" : ""
             }`}
           >
             {item.image_link ? (
@@ -125,7 +188,6 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh, t
         ))}
       </div>
 
-      {/* Expanded Modal */}
       <AnimatePresence>
         {activeItem && !thumbnail && (
           <motion.div
@@ -145,7 +207,8 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh, t
               >
                 <X className="w-6 h-6" />
               </motion.button>
-              {activeItem.image_link ? (
+
+              {activeItem.image_link && (
                 <Image
                   src={activeItem.image_link}
                   alt={activeItem.sub_type}
@@ -153,35 +216,45 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh, t
                   height={300}
                   className="object-cover rounded-lg mx-auto"
                 />
-              ) : null}
-              <div className="mt-4">
-                <p className="font-bold">Item:</p>
+              )}
+
+              <div className="mt-4 space-y-1">
                 <p>
-                  <span className="font-semibold">Sub Type:</span> {activeItem.sub_type}
+                  <span className="font-semibold">Sub Type:</span>{" "}
+                  {activeItem.sub_type}
                 </p>
                 <p>
-                  <span className="font-semibold">Color:</span> {activeItem.color}
+                  <span className="font-semibold">Color:</span>{" "}
+                  {activeItem.color}
                 </p>
                 <p>
-                  <span className="font-semibold">Material:</span> {activeItem.material}
+                  <span className="font-semibold">Material:</span>{" "}
+                  {activeItem.material}
                 </p>
                 <p>
-                  <span className="font-semibold">Fit:</span> {activeItem.fit}
+                  <span className="font-semibold">Fit:</span>{" "}
+                  {activeItem.fit}
                 </p>
                 <p>
-                  <span className="font-semibold">Pattern:</span> {activeItem.pattern}
+                  <span className="font-semibold">Pattern:</span>{" "}
+                  {activeItem.pattern}
                 </p>
                 <p>
-                  <span className="font-semibold">Formality:</span> {activeItem.formality}
+                  <span className="font-semibold">Formality:</span>{" "}
+                  {activeItem.formality}
                 </p>
                 <p>
-                  <span className="font-semibold">Suitable for Weather:</span> {activeItem.suitable_for_weather}
+                  <span className="font-semibold">
+                    Suitable for Weather:
+                  </span>{" "}
+                  {activeItem.suitable_for_weather}
                 </p>
               </div>
+
               {pathname !== "/Outfits" && (
                 <button
-                  onClick={() => handleDelete(activeItem.id)}
-                  className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
+                  onClick={() => initiateDelete(activeItem.id)}
+                  className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                 >
                   Delete item
                 </button>
@@ -190,6 +263,14 @@ const ItemCard: React.FC<ItemCardProps> = ({ itemType, itemId, limit, refresh, t
           </motion.div>
         )}
       </AnimatePresence>
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        itemId={itemToDelete || ""}
+        outfitCount={outfitsCount}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 };

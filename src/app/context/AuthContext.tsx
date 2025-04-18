@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (!user) return; // Only activate when user is logged in.
 
     let timeoutId: ReturnType<typeof setTimeout>;
-    const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes in milliseconds
+    const SESSION_TIMEOUT = 60 * 60 * 1000; // 20 minutes in milliseconds
 
     const handleSessionTimeout = () => {
       logout();
