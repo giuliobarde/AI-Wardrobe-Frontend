@@ -8,6 +8,7 @@ import CreateOutfit from "../components/CreateOutfit";
 import { generateChatOutfit } from "../services/openAIServices";
 import OutfitCard from "../components/OutfitCard";
 import ItemCard from "../components/ItemCard";
+import { Loader2 } from "lucide-react";
 
 export default function OutfitsPage() {
   const [occasion, setOccasion] = useState("");
@@ -100,7 +101,12 @@ export default function OutfitsPage() {
               disabled={loading}
               className="w-full py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition transform hover:scale-105"
             >
-              {loading ? "Generating..." : "Generate Outfit"}
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Generating...
+                </span>
+              ) : "Generate Outfit"}
             </button>
           </form>
           {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
