@@ -17,8 +17,8 @@ const ErrorModal: FC<ErrorModalProps> = ({ error, onClose }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={onClose} // Clicking the overlay closes the modal.
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black/50"
+          onClick={onClose}
         >
           <motion.div
             className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full relative"

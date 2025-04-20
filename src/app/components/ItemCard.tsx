@@ -36,6 +36,7 @@ interface ItemCardProps {
   limit?: number;
   refresh?: number;
   thumbnail?: boolean;
+  onError?: (msg: string) => void;
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({
@@ -44,10 +45,10 @@ const ItemCard: React.FC<ItemCardProps> = ({
   limit,
   refresh,
   thumbnail,
+  onError,
 }) => {
   const { user, isLoading } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<Item | null>(null);
   const layoutId = useId();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -64,89 +65,72 @@ const ItemCard: React.FC<ItemCardProps> = ({
     const fetchItems = async () => {
       if (isLoading) return;
       if (!user?.access_token) {
-        setError("User authentication failed. Please log in again.");
+        onError?.("User authentication failed. Please log in again.");
         return;
       }
       try {
-        let fetchedItems: Item[] = [];
+        let fetched: Item[] = [];
         if (itemId) {
           const res = await displayClothingItemById(user.access_token, itemId);
-          fetchedItems = res.data
+          fetched = res.data
             ? Array.isArray(res.data)
               ? res.data
               : [res.data]
             : [];
         } else if (itemType) {
-          const res = await displayClothingItem(
-            user.access_token,
-            itemType
-          );
-          fetchedItems = res.data ?? [];
+          const res = await displayClothingItem(user.access_token, itemType);
+          fetched = res.data ?? [];
         } else {
-          setError("No item id or item type provided.");
+          onError?.("No item id or item type provided.");
           return;
         }
-        setItems(limit ? fetchedItems.slice(0, limit) : fetchedItems);
-        setError(null);
-      } catch {
-        setError("Failed to fetch items");
+        setItems(limit ? fetched.slice(0, limit) : fetched);
+      } catch (err: any) {
+        onError?.("Failed to fetch items.");
       }
     };
     fetchItems();
-  }, [user, itemType, itemId, limit, refresh, isLoading]);
+  }, [user, itemType, itemId, limit, refresh, isLoading, onError]);
 
-  const checkItemOutfits = async (itemId: string): Promise<number> => {
-    if (!user?.access_token) {
-      throw new Error("User authentication failed. Please log in again.");
-    }
-    const resp = await checkItemInOutfits(user.access_token, itemId);
+  const checkItemOutfits = async (id: string): Promise<number> => {
+    if (!user?.access_token) throw new Error("User auth failed.");
+    const resp = await checkItemInOutfits(user.access_token, id);
     return resp.data.length;
   };
 
-  const initiateDelete = async (itemId: string) => {
+  const initiateDelete = async (id: string) => {
     if (!user?.access_token) {
-      setError("User authentication failed. Please log in again.");
+      onError?.("User authentication failed. Please log in again.");
       return;
     }
-
     try {
-      const count = await checkItemOutfits(itemId);
-      if (count > 0) {
-        setOutfitsCount(count);
-        setItemToDelete(itemId);
+      const cnt = await checkItemOutfits(id);
+      if (cnt > 0) {
+        setOutfitsCount(cnt);
+        setItemToDelete(id);
         setShowDeleteModal(true);
       } else {
-        performDelete(itemId);
+        performDelete(id);
       }
-    } catch (err) {
-      console.error("Check failed:", err);
-      setError("Could not verify whether this item is in any outfits.");
+    } catch {
+      onError?.("Could not verify whether this item is in any outfits.");
     }
   };
 
-  const performDelete = async (
-    itemId: string,
-    deleteOutfits = false
-  ) => {
-    setError(null);
+  const performDelete = async (id: string, deleteOutfits = false) => {
     if (!user?.access_token) {
-      setError("User authentication failed. Please log in again.");
+      onError?.("User authentication failed. Please log in again.");
       return;
     }
     try {
-      await deleteClothingItem(
-        user.access_token,
-        itemId,
-        deleteOutfits
-      );
-      setItems((prev) => prev.filter((i) => i.id !== itemId));
+      await deleteClothingItem(user.access_token, id, deleteOutfits);
+      setItems((prev) => prev.filter((i) => i.id !== id));
       setActiveItem(null);
     } catch {
-      setError("Failed to delete item");
+      onError?.("Failed to delete item.");
     }
   };
 
-  // Now accepts the item ID explicitly
   const handleConfirmDelete = (id: string) => {
     performDelete(id, true);
     setShowDeleteModal(false);
@@ -160,7 +144,6 @@ const ItemCard: React.FC<ItemCardProps> = ({
 
   return (
     <div className="relative">
-      {error && <p className="text-red-500">{error}</p>}
       <div className="flex flex-wrap gap-4 justify-center">
         {items.map((item) => (
           <motion.div
@@ -201,12 +184,12 @@ const ItemCard: React.FC<ItemCardProps> = ({
               layoutId={`item-${activeItem.id}-${layoutId}`}
               className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-4"
             >
-              <motion.button
+              <button
                 onClick={() => setActiveItem(null)}
                 className="absolute top-2 right-2 p-2 text-gray-400 hover:text-gray-900"
               >
                 <X className="w-6 h-6" />
-              </motion.button>
+              </button>
 
               {activeItem.image_link && (
                 <Image
@@ -219,36 +202,19 @@ const ItemCard: React.FC<ItemCardProps> = ({
               )}
 
               <div className="mt-4 space-y-1">
-                <p>
-                  <span className="font-semibold">Sub Type:</span>{" "}
-                  {activeItem.sub_type}
-                </p>
-                <p>
-                  <span className="font-semibold">Color:</span>{" "}
-                  {activeItem.color}
-                </p>
-                <p>
-                  <span className="font-semibold">Material:</span>{" "}
-                  {activeItem.material}
-                </p>
-                <p>
-                  <span className="font-semibold">Fit:</span>{" "}
-                  {activeItem.fit}
-                </p>
-                <p>
-                  <span className="font-semibold">Pattern:</span>{" "}
-                  {activeItem.pattern}
-                </p>
-                <p>
-                  <span className="font-semibold">Formality:</span>{" "}
-                  {activeItem.formality}
-                </p>
-                <p>
-                  <span className="font-semibold">
-                    Suitable for Weather:
-                  </span>{" "}
-                  {activeItem.suitable_for_weather}
-                </p>
+                {[
+                  ["Sub Type", activeItem.sub_type],
+                  ["Color", activeItem.color],
+                  ["Material", activeItem.material],
+                  ["Fit", activeItem.fit],
+                  ["Pattern", activeItem.pattern],
+                  ["Formality", activeItem.formality],
+                  ["Weather", activeItem.suitable_for_weather],
+                ].map(([label, val]) => (
+                  <p key={label}>
+                    <span className="font-semibold">{label}:</span> {val}
+                  </p>
+                ))}
               </div>
 
               {pathname !== "/Outfits" && (
