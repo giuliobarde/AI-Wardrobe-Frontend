@@ -26,10 +26,32 @@ export const commonColors = [
 
 // ——— Other grouped options ———
 const itemTypeOptions = {
-  tops: [ /* … as before … */ ].sort(),
-  bottoms: [ /* … */ ].sort(),
-  shoes: [ /* … */ ].sort(),
-  outerware: [ /* … */ ].sort(),
+  tops: [
+    "blouse", "button-down shirt", "button-up shirt", "cardigan", 
+    "crewneck sweater", "hoodie", "jersey", "long sleeve t-shirt", 
+    "polo shirt", "shirt", "sweatshirt", "sweater", "tank top", 
+    "t-shirt", "turtleneck", "tuxedo shirt"
+  ].sort(),
+  bottoms: [
+    "chinos", "corduroys", "dress pants", "jeans", "leggings", 
+    "shorts", "skirt", "sweatpants", "tuxedo pants"
+  ].sort(),
+  shoes: [
+    "rain boots", "combat boots", "chelsea boots", "dress boots", 
+    "work boots", "thigh-high boots", "knee-high boots", "logger boots", 
+    "harness boots", "heel boots", "cowboy boots", "chukka boots", 
+    "hiking boots", "wingtip boots", "whole cut oxfords", "plain toe oxfords", 
+    "cap toe oxfords", "wing tip oxfords", "plain toe derbies", 
+    "cap toe derbies", "wing tip derbies", "single monk strap", 
+    "double monk strap", "triple monk strap", "kitten heels", 
+    "stiletto heels", "wedges", "platforms", "pennie loafers", 
+    "bit loafers", "tassle loafers", "kiltie loafers", "running shoes", 
+    "opera pumps", "ribbon pumps", "sandals", "sneakers"
+  ].sort(),
+  outerware: [
+    "bomber jacket", "denim jacket", "leather jacket", "overcoat", 
+    "puffer jacket", "raincoat", "suit jacket", "trench coat", "tuxedo jacket"
+  ].sort(),
 };
 
 const materialOptions = {

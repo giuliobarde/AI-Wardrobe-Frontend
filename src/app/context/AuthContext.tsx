@@ -26,7 +26,8 @@ export interface AuthContextType {
     password: string,
     firstName: string,
     lastName: string,
-    username: string
+    username: string,
+    gender: string
   ) => Promise<void>;
   logout: () => void;
 }
@@ -84,7 +85,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     password: string,
     firstName: string,
     lastName: string,
-    username: string
+    username: string,
+    gender: string
   ) => {
     try {
       const response = await axios.post("http://localhost:8000/sign-up/", {
@@ -93,6 +95,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         first_name: firstName,
         last_name: lastName,
         username,
+        gender,
       });
       // Optionally, automatically log in the user after sign-up.
       await login(email, password);
