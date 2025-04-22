@@ -1,17 +1,31 @@
 // app/profile/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
 import { getAllUserItems } from "@/app/services/wardrobeService";
 import ItemCard from "../components/ItemCard";
 import AddItem from "../components/AddItem";
-import { Settings, PlusCircle, ChevronRight, Clock, User, CalendarDays } from "lucide-react";
+import {
+  Settings,
+  PlusCircle,
+  ChevronRight,
+  Clock,
+  User,
+  CalendarDays,
+} from "lucide-react";
 import ErrorModal from "@/app/components/ErrorModal";
+import OutfitCard from "../components/OutfitCard";
+import { getSavedOutfits } from "../services/outfitServices";
 
 interface ClothingItem {
+  id: string;
+  added_date?: string;
+}
+
+interface Outfit {
   id: string;
   added_date?: string;
 }
@@ -20,34 +34,69 @@ export default function Profile() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
+  // ITEMS state
+  const [allItems, setAllItems] = useState<ClothingItem[]>([]);
   const [recentItems, setRecentItems] = useState<ClothingItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [itemsError, setItemsError] = useState("");
-  const [activeTab, setActiveTab] = useState<"recent" | "favorites">("recent");
 
-  // If not signed in, redirect home
+  // OUTFITS state
+  const [allOutfits, setAllOutfits] = useState<Outfit[]>([]);
+  const [loadingOutfits, setLoadingOutfits] = useState(false);
+  const [outfitsError, setOutfitsError] = useState("");
+
+  const [activeTab, setActiveTab] = useState<"recent" | "favorites">("recent");
+  const [refreshOutfits, setRefreshOutfits] = useState(0);
+
+  // Redirect to home if not signed in
   useEffect(() => {
     if (!isLoading && !user?.access_token) {
       router.push("/");
     }
   }, [isLoading, user, router]);
 
-  // Load recent items
-  useEffect(() => {
-    async function fetchRecentItems() {
-      setLoadingItems(true);
-      setItemsError("");
-      try {
-        const data = await getAllUserItems(user!.access_token);
-        setRecentItems(data.data.slice(0, 8));
-      } catch (err: any) {
-        console.error(err);
-        setItemsError("Failed to load recent items.");
-      }
-      setLoadingItems(false);
+  // Load all items
+  const loadItems = useCallback(async () => {
+    if (!user?.access_token) return;
+    setLoadingItems(true);
+    setItemsError("");
+    try {
+      const itemsResponse = await getAllUserItems(user.access_token);
+      const itemsData = itemsResponse.data as ClothingItem[];
+      setAllItems(itemsData);
+      setRecentItems(itemsData.slice(0, 8));
+    } catch (err: any) {
+      console.error(err);
+      setItemsError("Failed to load items.");
     }
-    if (user?.access_token) fetchRecentItems();
+    setLoadingItems(false);
   }, [user]);
+
+  // Load all outfits
+  const loadOutfits = useCallback(async () => {
+    if (!user?.access_token) return;
+    setLoadingOutfits(true);
+    setOutfitsError("");
+    try {
+      // getSavedOutfits already returns Outfit[]
+      const outfitsData = await getSavedOutfits(user.access_token);
+      setAllOutfits(outfitsData);
+    } catch (err: any) {
+      console.error(err);
+      setOutfitsError("Failed to load outfits.");
+    }
+    setLoadingOutfits(false);
+  }, [user]);
+
+  // Initial load for items
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
+
+  // Initial load & refresh for outfits
+  useEffect(() => {
+    loadOutfits();
+  }, [loadOutfits, refreshOutfits]);
 
   const ItemSkeleton = () => (
     <div className="bg-gray-100 rounded-lg animate-pulse h-44"></div>
@@ -55,8 +104,12 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen pt-20 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
+      {/* Errors */}
       {itemsError && (
         <ErrorModal error={itemsError} onClose={() => setItemsError("")} />
+      )}
+      {outfitsError && (
+        <ErrorModal error={outfitsError} onClose={() => setOutfitsError("")} />
       )}
 
       <div className="max-w-6xl mx-auto px-4">
@@ -80,7 +133,7 @@ export default function Profile() {
                   </p>
                   <p className="text-gray-500 flex items-center justify-center md:justify-start mt-1">
                     <CalendarDays size={16} className="mr-1" />
-                    Member since {user?.member_since || "2023"}
+                    Member since {user?.member_since}
                   </p>
                 </div>
               </div>
@@ -92,27 +145,22 @@ export default function Profile() {
                   <Settings size={18} className="mr-2" />
                   <span>Settings</span>
                 </Link>
-                <AddItem
-                  onItemAdded={() => {
-                    if (user?.access_token) {
-                      getAllUserItems(user.access_token)
-                        .then((d) => setRecentItems(d.data.slice(0, 8)))
-                        .catch(() => setItemsError("Failed to refresh items"));
-                    }
-                  }}
-                />
+                <AddItem onItemAdded={loadItems} />
               </div>
             </div>
 
+            {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 text-center">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-3xl font-bold text-blue-600">
-                  {recentItems.length}
+                  {allItems.length}
                 </p>
                 <p className="text-gray-600">Items</p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
-                <p className="text-3xl font-bold text-purple-600">12</p>
+                <p className="text-3xl font-bold text-purple-600">
+                  {allOutfits.length}
+                </p>
                 <p className="text-gray-600">Outfits</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
@@ -149,6 +197,7 @@ export default function Profile() {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
+              {/* heart icon */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="18"
@@ -184,15 +233,7 @@ export default function Profile() {
               <p className="text-gray-500 mb-6 text-center max-w-md">
                 Start building your digital wardrobe by adding your first item
               </p>
-              <AddItem
-                onItemAdded={() => {
-                  if (user?.access_token) {
-                    getAllUserItems(user.access_token)
-                      .then((d) => setRecentItems(d.data.slice(0, 8)))
-                      .catch(() => setItemsError("Failed to refresh items"));
-                  }
-                }}
-              />
+              <AddItem onItemAdded={loadItems} />
             </div>
           ) : activeTab === "favorites" ? (
             <div className="flex flex-col items-center py-12">
@@ -230,7 +271,7 @@ export default function Profile() {
           {activeTab === "recent" && recentItems.length > 0 && (
             <div className="text-center mt-6">
               <Link
-                href="/wardrobe#favorites"
+                href="/Wardrobe"
                 className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-medium hover:opacity-90 transition transform hover:scale-105 shadow-md"
               >
                 View All Items
@@ -243,7 +284,7 @@ export default function Profile() {
         {/* Recent Outfits Preview */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Recent Outfits</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Favorite Outfits</h2>
             <Link
               href="/Outfits#saved"
               className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
@@ -253,21 +294,9 @@ export default function Profile() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, idx) => (
-              <div
-                key={idx}
-                className="bg-gray-50 p-4 rounded-lg border border-gray-100 hover:shadow-md transition"
-              >
-                <div className="flex mb-3">
-                  <div className="w-20 h-20 bg-gray-200 rounded-md mr-2" />
-                  <div className="w-20 h-20 bg-gray-200 rounded-md mr-2" />
-                  <div className="w-20 h-20 bg-gray-200 rounded-md" />
-                </div>
-                <h3 className="font-medium">Summer Casual {idx + 1}</h3>
-                <p className="text-gray-500 text-sm">Created 3 days ago</p>
-              </div>
-            ))}
+          <div className="grid gap-6">
+            {/* you can swap this out for mapping your recent outfits if desired */}
+            <OutfitCard key={refreshOutfits} />
           </div>
         </div>
       </div>
