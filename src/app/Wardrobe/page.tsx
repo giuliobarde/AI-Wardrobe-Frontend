@@ -145,13 +145,7 @@ export default function Wardrobe() {
           </div>
           <div className="relative">
             <div className="flex flex-nowrap space-x-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent">
-              <motion.div
-                whileHover={{ scale: 1.02, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-                className="min-w-max"
-              >
-                <AddItem onItemAdded={handleItemAdded} onError={setError} />
-              </motion.div>
+              <AddItem onItemAdded={handleItemAdded} onError={setError} />
               <ItemCard
                 itemType={path}
                 limit={itemLimit}

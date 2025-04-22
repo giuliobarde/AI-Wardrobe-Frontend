@@ -1,14 +1,14 @@
+// app/profile/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
-import { updateProfile } from "@/app/services/userService";
 import { getAllUserItems } from "@/app/services/wardrobeService";
 import ItemCard from "../components/ItemCard";
 import AddItem from "../components/AddItem";
-import { FilePenLine } from "lucide-react";
+import { Settings, PlusCircle, ChevronRight, Clock, User, CalendarDays } from "lucide-react";
 import ErrorModal from "@/app/components/ErrorModal";
 
 interface ClothingItem {
@@ -17,237 +17,258 @@ interface ClothingItem {
 }
 
 export default function Profile() {
-  const { user, isLoading, setUser } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
-  // States for editing profile info.
-  const [editing, setEditing] = useState(false);
-  const [firstName, setFirstName] = useState(user?.first_name ?? "");
-  const [lastName, setLastName] = useState(user?.last_name ?? "");
-  const [username, setUsername] = useState(user?.username ?? "");
-  const [updateError, setUpdateError] = useState("");
-  const [updating, setUpdating] = useState(false);
-
-  // States for recent items.
   const [recentItems, setRecentItems] = useState<ClothingItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [itemsError, setItemsError] = useState("");
+  const [activeTab, setActiveTab] = useState<"recent" | "favorites">("recent");
 
-  // Redirect if user is not signed in and auth is not loading.
+  // If not signed in, redirect home
   useEffect(() => {
     if (!isLoading && !user?.access_token) {
       router.push("/");
     }
-  }, [user, router, isLoading]);
+  }, [isLoading, user, router]);
 
-  // Update form fields when user data changes.
-  useEffect(() => {
-    if (user) {
-      setFirstName(user.first_name ?? "");
-      setLastName(user.last_name ?? "");
-      setUsername(user.username ?? "");
-    }
-  }, [user]);
-
-  // Fetch recent items.
+  // Load recent items
   useEffect(() => {
     async function fetchRecentItems() {
       setLoadingItems(true);
       setItemsError("");
       try {
-        const data = await getAllUserItems(user?.access_token as string);
-        // Assuming response is { data: [...] } sorted by added_date descending.
-        setRecentItems(data.data.slice(0, 4));
+        const data = await getAllUserItems(user!.access_token);
+        setRecentItems(data.data.slice(0, 8));
       } catch (err: any) {
         console.error(err);
         setItemsError("Failed to load recent items.");
       }
       setLoadingItems(false);
     }
-    if (user?.access_token) {
-      fetchRecentItems();
-    }
+    if (user?.access_token) fetchRecentItems();
   }, [user]);
 
-  // Handler for saving updated profile info.
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUpdating(true);
-    setUpdateError("");
-    try {
-      const updatedResponse = await updateProfile(
-        user?.access_token as string,
-        firstName,
-        lastName,
-        username
-      );
-      // Merge updated fields with existing user state.
-      setUser((prev) => ({ ...prev, ...updatedResponse.data }));
-      setEditing(false);
-      router.refresh();
-    } catch (error: any) {
-      setUpdateError(error.message);
-    }
-    setUpdating(false);
-  };
-
-  const handleCancel = () => {
-    setEditing(false);
-    setFirstName(user?.first_name ?? "");
-    setLastName(user?.last_name ?? "");
-    setUsername(user?.username ?? "");
-    setUpdateError("");
-  };
+  const ItemSkeleton = () => (
+    <div className="bg-gray-100 rounded-lg animate-pulse h-44"></div>
+  );
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 bg-gray-50">
-      {/* Error Modal */}
-      {(updateError || itemsError) && (
-        <ErrorModal
-          error={updateError || itemsError}
-          onClose={() => {
-            setUpdateError("");
-            setItemsError("");
-          }}
-        />
+    <div className="min-h-screen pt-20 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
+      {itemsError && (
+        <ErrorModal error={itemsError} onClose={() => setItemsError("")} />
       )}
 
-      <div className="max-w-2xl mx-auto space-y-8">
-        {/* Profile Card */}
-        <div className="bg-white shadow-xl rounded-xl p-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
-              My Profile
-            </h1>
-            {!editing && (
-              <button
-                onClick={() => setEditing(true)}
-                className="flex items-center text-purple-600 hover:text-purple-700 transition"
-                title="Edit Profile"
-              >
-                <FilePenLine />
-              </button>
-            )}
-          </div>
-          {editing ? (
-            <form onSubmit={handleSave} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:outline-none focus:border-green-500"
-                  required
-                />
+      <div className="max-w-6xl mx-auto px-4">
+        {/* Profile Header */}
+        <div className="relative mb-8">
+          <div className="h-40 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg" />
+          <div className="bg-white rounded-xl shadow-xl p-6 mx-4 -mt-20 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-center md:items-end">
+              <div className="flex flex-col md:flex-row items-center mb-4 md:mb-0">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 md:mb-0 md:mr-6 border-4 border-white shadow-md">
+                  {user?.first_name?.[0]}
+                  {user?.last_name?.[0]}
+                </div>
+                <div className="text-center md:text-left">
+                  <h1 className="text-3xl font-bold text-gray-800">
+                    {user?.first_name} {user?.last_name}
+                  </h1>
+                  <p className="text-gray-500 flex items-center justify-center md:justify-start mt-1">
+                    <User size={16} className="mr-1" />
+                    @{user?.username}
+                  </p>
+                  <p className="text-gray-500 flex items-center justify-center md:justify-start mt-1">
+                    <CalendarDays size={16} className="mr-1" />
+                    Member since {user?.member_since || "2023"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:outline-none focus:border-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:outline-none focus:border-green-500"
-                  required
-                />
-              </div>
-              {updateError && (
-                <p className="text-red-500 text-center text-sm">{updateError}</p>
-              )}
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+              <div className="flex space-x-3">
+                <Link
+                  href="/settings"
+                  className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition transform hover:scale-105"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={updating}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-                >
-                  {updating ? "Saving..." : "Save"}
-                </button>
+                  <Settings size={18} className="mr-2" />
+                  <span>Settings</span>
+                </Link>
+                <AddItem
+                  onItemAdded={() => {
+                    if (user?.access_token) {
+                      getAllUserItems(user.access_token)
+                        .then((d) => setRecentItems(d.data.slice(0, 8)))
+                        .catch(() => setItemsError("Failed to refresh items"));
+                    }
+                  }}
+                />
               </div>
-            </form>
-          ) : (
-            <div className="space-y-3">
-              <h2 className="text-xl font-semibold text-gray-800">
-                {user?.first_name} {user?.last_name}
-              </h2>
-              <p className="text-gray-600">
-                <span className="font-medium">Username:</span> {user?.username}
-              </p>
-              <p className="text-gray-600">
-                <span className="font-medium">Email:</span> {user?.email}
-              </p>
-              {user?.gender && (
-                <p className="text-gray-600">
-                  <span className="font-medium">Gender:</span> {user?.gender}
-                </p>
-              )}
-              {user?.member_since && (
-                <p className="text-gray-600">
-                  <span className="font-medium">Member Since:</span> {user?.member_since}
-                </p>
-              )}
             </div>
-          )}
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 text-center">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-3xl font-bold text-blue-600">
+                  {recentItems.length}
+                </p>
+                <p className="text-gray-600">Items</p>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <p className="text-3xl font-bold text-purple-600">12</p>
+                <p className="text-gray-600">Outfits</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <p className="text-3xl font-bold text-green-600">5</p>
+                <p className="text-gray-600">Favorites</p>
+              </div>
+              <div className="bg-amber-50 p-4 rounded-lg">
+                <p className="text-3xl font-bold text-amber-600">85%</p>
+                <p className="text-gray-600">Style Match</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Recent Items Card */}
-        <div className="bg-white shadow-xl rounded-xl p-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+        {/* Wardrobe Items Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex border-b mb-6">
+            <button
+              onClick={() => setActiveTab("recent")}
+              className={`pb-3 px-4 font-medium text-lg flex items-center ${
+                activeTab === "recent"
+                  ? "border-b-2 border-blue-500 text-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Clock size={18} className="mr-2" />
               Recent Items
-            </h2>
+            </button>
+            <button
+              onClick={() => setActiveTab("favorites")}
+              className={`pb-3 px-4 font-medium text-lg flex items-center ${
+                activeTab === "favorites"
+                  ? "border-b-2 border-blue-500 text-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mr-2"
+              >
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </svg>
+              Favorites
+            </button>
           </div>
+
           {loadingItems ? (
-            <p className="text-center text-gray-600">Loading recent items...</p>
-          ) : itemsError ? (
-            <p className="text-center text-red-500 text-sm">{itemsError}</p>
-          ) : recentItems.length === 0 ? (
-            <div className="flex flex-col items-center">
-              <p className="text-center text-gray-600 mb-4">
-                You haven't added any items yet.
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, idx) => (
+                <ItemSkeleton key={idx} />
+              ))}
+            </div>
+          ) : activeTab === "recent" && recentItems.length === 0 ? (
+            <div className="flex flex-col items-center py-12">
+              <div className="bg-blue-50 p-6 rounded-full mb-4">
+                <PlusCircle size={48} className="text-blue-500" />
+              </div>
+              <p className="text-xl font-medium text-gray-700 mb-2">
+                Your wardrobe is empty
               </p>
-              <AddItem onItemAdded={() => {}} />
+              <p className="text-gray-500 mb-6 text-center max-w-md">
+                Start building your digital wardrobe by adding your first item
+              </p>
+              <AddItem
+                onItemAdded={() => {
+                  if (user?.access_token) {
+                    getAllUserItems(user.access_token)
+                      .then((d) => setRecentItems(d.data.slice(0, 8)))
+                      .catch(() => setItemsError("Failed to refresh items"));
+                  }
+                }}
+              />
+            </div>
+          ) : activeTab === "favorites" ? (
+            <div className="flex flex-col items-center py-12">
+              <div className="bg-purple-50 p-6 rounded-full mb-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-purple-500"
+                >
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                </svg>
+              </div>
+              <p className="text-xl font-medium text-gray-700 mb-2">
+                No favorites yet
+              </p>
+              <p className="text-gray-500 mb-6 text-center max-w-md">
+                Mark items as favorites to see them here
+              </p>
             </div>
           ) : (
-            // Use a grid to display items.
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mb-6">
               {recentItems.map((item) => (
                 <ItemCard key={item.id} itemId={item.id} />
               ))}
             </div>
           )}
+
+          {activeTab === "recent" && recentItems.length > 0 && (
+            <div className="text-center mt-6">
+              <Link
+                href="/wardrobe#favorites"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-medium hover:opacity-90 transition transform hover:scale-105 shadow-md"
+              >
+                View All Items
+                <ChevronRight size={18} className="ml-1" />
+              </Link>
+            </div>
+          )}
         </div>
 
-        {/* Navigation Button */}
-        <div className="mt-6 text-center">
-          <Link
-            href="/Wardrobe"
-            className="inline-block px-8 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition transform hover:scale-105"
-          >
-            Back to Wardrobe
-          </Link>
+        {/* Recent Outfits Preview */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Recent Outfits</h2>
+            <Link
+              href="/Outfits#saved"
+              className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+            >
+              View All
+              <ChevronRight size={16} className="ml-1" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, idx) => (
+              <div
+                key={idx}
+                className="bg-gray-50 p-4 rounded-lg border border-gray-100 hover:shadow-md transition"
+              >
+                <div className="flex mb-3">
+                  <div className="w-20 h-20 bg-gray-200 rounded-md mr-2" />
+                  <div className="w-20 h-20 bg-gray-200 rounded-md mr-2" />
+                  <div className="w-20 h-20 bg-gray-200 rounded-md" />
+                </div>
+                <h3 className="font-medium">Summer Casual {idx + 1}</h3>
+                <p className="text-gray-500 text-sm">Created 3 days ago</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

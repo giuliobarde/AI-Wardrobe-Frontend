@@ -19,7 +19,7 @@ export default function Home() {
 
   const headingText = user
     ? `Welcome, ${user.username || user.email}!`
-    : "Welcome to AI Wardrobe";
+    : "Welcome to Attirely";
 
   // Optionally, clear the query parameter after showing the modal
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function Home() {
           </div>
         </main>
         <footer className="mt-12 p-4 text-center text-gray-500 text-sm">
-          © {new Date().getFullYear()} AI Wardrobe. All rights reserved.
+          © {new Date().getFullYear()} Attirely. All rights reserved.
         </footer>
         {/* Render modals */}
         {showLogin && (
