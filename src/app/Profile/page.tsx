@@ -139,7 +139,7 @@ export default function Profile() {
               </div>
               <div className="flex space-x-3">
                 <Link
-                  href="/settings"
+                  href="/Settings"
                   className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition transform hover:scale-105"
                 >
                   <Settings size={18} className="mr-2" />

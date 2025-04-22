@@ -452,7 +452,7 @@ export default function Settings() {
                           <summary className="flex justify-between items-center font-medium cursor-pointer list-none">
                             <span>How do I add items to my wardrobe?</span>
                             <span className="transition group-open:rotate-180">
-                              <svg fill="none" height="24" shapeRendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24">
+                              <svg fill="none" height="24" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="24">
                                 <path d="M6 9l6 6 6-6"></path>
                               </svg>
                             </span>
@@ -466,7 +466,7 @@ export default function Settings() {
                           <summary className="flex justify-between items-center font-medium cursor-pointer list-none">
                             <span>How do I create outfits?</span>
                             <span className="transition group-open:rotate-180">
-                              <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24">
+                              <svg fill="none" height="24" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="24">
                                 <path d="M6 9l6 6 6-6"></path>
                               </svg>
                             </span>
@@ -480,7 +480,7 @@ export default function Settings() {
                           <summary className="flex justify-between items-center font-medium cursor-pointer list-none">
                             <span>Can I share my wardrobe with others?</span>
                             <span className="transition group-open:rotate-180">
-                              <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24">
+                              <svg fill="none" height="24" shapeRendering="geometricPrecision" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="24">
                                 <path d="M6 9l6 6 6-6"></path>
                               </svg>
                             </span>
