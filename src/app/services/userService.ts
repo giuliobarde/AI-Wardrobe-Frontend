@@ -6,7 +6,8 @@ export const updateProfile = async (
   token: string,
   firstName: string,
   lastName: string,
-  username: string
+  username: string,
+  gender: string
 ) => {
   try {
     const response = await axios.post(
@@ -15,6 +16,7 @@ export const updateProfile = async (
         first_name: firstName,
         last_name: lastName,
         username: username,
+        gender: gender,
       },
       {
         headers: {

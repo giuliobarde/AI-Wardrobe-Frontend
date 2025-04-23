@@ -1,13 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
 import { updateProfile } from "@/app/services/userService";
-import { 
-  User, ChevronLeft, Key, Bell, Shield, HelpCircle, 
-  LogOut, Save, X, CheckCircle
+import {
+  User,
+  ChevronLeft,
+  Key,
+  Bell,
+  Shield,
+  HelpCircle,
+  LogOut,
+  Save,
+  X,
+  CheckCircle
 } from "lucide-react";
 import ErrorModal from "@/app/components/ErrorModal";
 
@@ -48,28 +56,31 @@ export default function Settings() {
     setUpdating(true);
     setUpdateError("");
     setUpdateSuccess(false);
-    
+
     try {
       const updatedResponse = await updateProfile(
-        user?.access_token as string,
+        user!.access_token,
         firstName,
         lastName,
-        username
+        username,
+        gender
       );
-      
-      // Merge updated fields with existing user state
-      setUser((prev) => ({ ...prev, ...updatedResponse.data }));
+
+      // Build the fresh user object with updated fields
+      const newUser = { ...user!, ...updatedResponse.data };
+
+      // Update React context
+      setUser(newUser);
+
+      // Persist to localStorage so changes survive refresh
+      localStorage.setItem("user", JSON.stringify(newUser));
+
       setUpdateSuccess(true);
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setUpdateSuccess(false);
-      }, 3000);
-      
+      setTimeout(() => setUpdateSuccess(false), 3000);
     } catch (error: any) {
       setUpdateError(error.message);
     }
-    
+
     setUpdating(false);
   };
 
@@ -84,16 +95,11 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen pt-20 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
-      {/* Error Modal */}
       {updateError && (
-        <ErrorModal
-          error={updateError}
-          onClose={() => setUpdateError("")}
-        />
+        <ErrorModal error={updateError} onClose={() => setUpdateError("")} />
       )}
 
       <div className="max-w-6xl mx-auto px-4">
-        {/* Back Button */}
         <Link
           href="/Profile"
           className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
@@ -102,10 +108,8 @@ export default function Settings() {
           Back to Profile
         </Link>
 
-        {/* Settings Container */}
         <div className="bg-white rounded-xl shadow-xl overflow-hidden">
           <div className="flex flex-col md:flex-row">
-            {/* Sidebar */}
             <div className="w-full md:w-64 bg-gray-50 p-6">
               <h1 className="text-2xl font-bold text-gray-800 mb-6">Settings</h1>
               <nav className="space-y-1">
@@ -123,7 +127,7 @@ export default function Settings() {
                     <span>{item.label}</span>
                   </button>
                 ))}
-                
+
                 <button
                   className="w-full flex items-center px-4 py-3 mt-4 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
                 >
@@ -133,7 +137,6 @@ export default function Settings() {
               </nav>
             </div>
 
-            {/* Content Area */}
             <div className="flex-1 p-6 md:p-8">
               {activeSection === "profile" && (
                 <>
