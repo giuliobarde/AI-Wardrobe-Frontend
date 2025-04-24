@@ -219,13 +219,15 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
   return (
     <>  
       {/* Add Button */}
-      <div
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setModalOpen(true)}
-        className="min-w-[150px] h-40 flex items-center justify-center bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100 transition"
-        aria-label="Add new clothing item"
+        className="flex items-center bg-blue-600 text-white px-6 py-3 rounded-full shadow-md hover:bg-blue-700 transition-colors"
       >
-        <Plus className="w-8 h-8 text-blue-600" />
-      </div>
+        <span className="mr-2">+</span>
+        Add Item
+      </motion.button>
 
       {/* Modal */}
       <AnimatePresence>

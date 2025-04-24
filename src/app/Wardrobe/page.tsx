@@ -7,7 +7,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import ItemCard from "../components/ItemCard";
 import AddItem from "../components/AddItem";
 import ErrorModal from "@/app/components/ErrorModal";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Category = {
   id: string;
@@ -20,9 +20,7 @@ export default function Wardrobe() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -33,7 +31,6 @@ export default function Wardrobe() {
 
   const handleItemAdded = () => {
     setRefreshKey((prev) => prev + 1);
-    setIsAddModalOpen(false);
   };
 
   const dismissError = () => setError(null);
@@ -49,33 +46,33 @@ export default function Wardrobe() {
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-    },
+    visible: { y: 0, opacity: 1 },
   };
 
-  // Renders either a vertical list (grid-view selected) or a horizontal scroll (list-view selected)
-  const getCategoryContent = (categoryId: string | null) => {
-    // class: when viewMode==="grid" → vertical list; when "list" → horizontal scroll
-    const containerClass =
-      viewMode === "grid"
-        ? "space-y-3"
-        : "flex space-x-4 overflow-x-auto py-2";
+  const pageTransition = {
+    type: "tween",
+    ease: "easeInOut",
+    duration: 0.35
+  };
 
+  // Always-scrollable layout
+  const containerClass = "flex space-x-4 overflow-x-auto py-2";
+
+  const getCategoryContent = (categoryId: string | null) => {
     if (categoryId === null || categoryId === "all") {
       return (
-        <>
+        <motion.div
+          key="all-categories"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={pageTransition}
+        >
           {categories
             .filter((cat) => cat.id !== "all")
             .map((category) => (
@@ -94,20 +91,33 @@ export default function Wardrobe() {
                 </div>
               </div>
             ))}
-        </>
+        </motion.div>
       );
     }
 
-    // Specific category
+    const currentCategory = categories.find(c => c.id === categoryId);
+    
     return (
-      <div className={containerClass}>
-        <ItemCard
-          itemType={categoryId}
-          limit={100}
-          refresh={refreshKey}
-          onError={setError}
-        />
-      </div>
+      <motion.div
+        key={`category-${categoryId}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={pageTransition}
+      >
+        <h3 className="text-xl font-medium mb-4 flex items-center">
+          <span className="mr-2">{currentCategory?.icon}</span>
+          {currentCategory?.label}
+        </h3>
+        <div className={containerClass}>
+          <ItemCard
+            itemType={categoryId}
+            limit={100}
+            refresh={refreshKey}
+            onError={setError}
+          />
+        </div>
+      </motion.div>
     );
   };
 
@@ -120,7 +130,6 @@ export default function Wardrobe() {
     >
       {error && <ErrorModal error={error} onClose={dismissError} />}
 
-      {/* Header */}
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -132,62 +141,16 @@ export default function Wardrobe() {
             Your Wardrobe
           </h1>
           <p className="text-gray-600 mt-2">
-            Organize your fashion collection and create amazing outfits with
-            ease.
+            Organize your fashion collection and create amazing outfits with ease.
           </p>
         </motion.div>
 
-        {/* Controls */}
-        <motion.div
-          initial={{ y: -10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4"
-        >
-          <div className="flex space-x-3 w-full sm:w-auto justify-between">
-            {/* View toggle */}
-            <div className="bg-white rounded-full shadow-sm flex p-1">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`px-4 py-2 rounded-full transition ${
-                  viewMode === "grid"
-                    ? "bg-blue-100 text-blue-600"
-                    : "text-gray-500"
-                }`}
-              >
-                Grid
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`px-4 py-2 rounded-full transition ${
-                  viewMode === "list"
-                    ? "bg-blue-100 text-blue-600"
-                    : "text-gray-500"
-                }`}
-              >
-                List
-              </button>
-            </div>
-
-            {/* Add new item */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center bg-blue-600 text-white px-6 py-3 rounded-full shadow-md hover:bg-blue-700 transition-colors"
-            >
-              <span className="mr-2">+</span>
-              Add Item
-            </motion.button>
-          </div>
-        </motion.div>
-
-        {/* Categories */}
+        {/* Categories & Add Item Inline */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="flex flex-wrap gap-3 mb-8"
+          className="flex items-center flex-wrap gap-3 mb-8"
         >
           {categories.map((category) => (
             <motion.button
@@ -211,29 +174,30 @@ export default function Wardrobe() {
               <span>{category.label}</span>
             </motion.button>
           ))}
+
+          {/* Add Item pushed to the far right */}
+          <motion.div variants={itemVariants} className="ml-auto">
+            <AddItem onItemAdded={handleItemAdded} onError={setError} />
+          </motion.div>
         </motion.div>
 
         {/* Main Content */}
         <motion.div
           layout
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl shadow-md p-6"
+          className="bg-white rounded-xl shadow-md p-6 overflow-hidden"
         >
           <h2 className="text-2xl font-semibold mb-6">
             {activeCategory
-              ? `${
-                  categories.find((c) => c.id === activeCategory)?.label ||
-                  activeCategory
-                }`
+              ? categories.find((c) => c.id === activeCategory)?.label ||
+                activeCategory
               : "All Items"}
           </h2>
 
-          {getCategoryContent(activeCategory)}
+          <AnimatePresence mode="wait">
+            {getCategoryContent(activeCategory)}
+          </AnimatePresence>
         </motion.div>
 
-        {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -241,39 +205,13 @@ export default function Wardrobe() {
           className="mt-8 text-center"
         >
           <p className="text-gray-500">
-            Need help organizing your wardrobe?{" "}
+            Need help organizing your wardrobe?{' '}
             <Link href="/help" className="text-blue-500 hover:underline">
               Check out our tips
             </Link>
           </p>
         </motion.div>
       </div>
-
-      {/* Add Item Modal */}
-      {isAddModalOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-xl shadow-xl p-6 max-w-lg w-full"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">Add New Item</h3>
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 text-xl"
-              >
-                ×
-              </button>
-            </div>
-            <AddItem onItemAdded={handleItemAdded} onError={setError} />
-          </motion.div>
-        </motion.div>
-      )}
     </motion.div>
   );
 }
