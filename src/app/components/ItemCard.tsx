@@ -7,6 +7,7 @@ import {
   displayClothingItem,
   displayClothingItemById,
   checkItemInOutfits,
+  favoriteUpdateSavedItem,
 } from "../services/wardrobeService";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
@@ -28,6 +29,7 @@ interface Item {
   suitable_for_occasion: string;
   sub_type: string;
   image_link?: string;
+  favorite: any;
 }
 
 interface ItemCardProps {
@@ -49,6 +51,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
 }) => {
   const { user, isLoading } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<Item | null>(null);
   const [favoriteItems, setFavoriteItems] = useState<Set<string>>(new Set()); // Track favorite items
   const [favoriteAnimation, setFavoriteAnimation] = useState<string | null>(null);
@@ -101,20 +104,28 @@ const ItemCard: React.FC<ItemCardProps> = ({
   }, [user, itemType, itemId, limit, refresh, isLoading, onError]);
 
   // Mock favorite functionality
-  const toggleFavorite = (itemId: string, e?: React.MouseEvent) => {
+  const toggleFavorite = async (itemId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setFavoriteAnimation(itemId);
-    setTimeout(() => setFavoriteAnimation(null), 1000);
-    
-    setFavoriteItems((prev) => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(itemId)) {
-        newFavorites.delete(itemId);
-      } else {
-        newFavorites.add(itemId);
+    if (!user?.access_token) {
+      setError("Please log in.");
+      return;
+    }
+    try {
+      await favoriteUpdateSavedItem({ id: itemId }, user.access_token);
+
+      // flip the favorite flag on the item in local state:
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === itemId ? { ...it, favorite: !it.favorite } : it
+        )
+      );
+      // if this card is the active modal item, flip it there too:
+      if (activeItem?.id === itemId) {
+        setActiveItem((it) => it && { ...it, favorite: !it.favorite });
       }
-      return newFavorites;
-    });
+    } catch {
+      setError("Failed to update favorite.");
+    }
   };
 
   const checkItemOutfits = async (id: string): Promise<number> => {
@@ -255,20 +266,11 @@ const ItemCard: React.FC<ItemCardProps> = ({
                   onClick={(e) => toggleFavorite(item.id, e)}
                   className="absolute top-2 right-2 p-1 bg-white/80 rounded-full shadow-sm z-10 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <motion.div
-                    animate={
-                      favoriteAnimation === item.id
-                        ? { scale: [1, 1.3, 1] }
-                        : {}
-                    }
-                    transition={{ duration: 0.5 }}
-                  >
-                    {favoriteItems.has(item.id) ? (
-                      <Heart fill="currentColor" className="h-5 w-5 text-red-500" />
-                    ) : (
-                      <Heart className="h-5 w-5 text-gray-400 hover:text-red-500" />
-                    )}
-                  </motion.div>
+                  {item.favorite ? (
+                    <Heart fill="currentColor" className="h-5 w-5 text-red-500" />
+                  ) : (
+                    <Heart className="h-5 w-5 text-gray-400 hover:text-red-500" />
+                  )}
                 </motion.button>
               )}
             </div>

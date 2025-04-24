@@ -19,14 +19,34 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
+
+  // true if we've scrolled past the “enter” threshold
   const [scrolled, setScrolled] = useState(false);
 
-  // Track scroll for background
+  // Track scroll for background with throttling + hysteresis
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    let ticking = false;
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const y = window.scrollY;
+          // enter threshold: 20px, exit threshold: 5px
+          if (!scrolled && y > 20) {
+            setScrolled(true);
+          } else if (scrolled && y < 5) {
+            setScrolled(false);
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll);
+    onScroll(); // set initial state based on current scroll
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [scrolled]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -53,11 +73,14 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-        scrolled
+      className={`
+        fixed top-0 left-0 w-full z-50 
+        transition-colors transition-shadow duration-300 ease-in-out
+        ${scrolled
           ? "bg-gray-900 bg-opacity-95 shadow-lg"
           : "bg-gradient-to-r from-gray-900 to-gray-800 bg-opacity-75 backdrop-blur-md"
-      }`}
+        }
+      `}
     >
       <div className="max-w-7xl mx-auto flex justify-between items-center px-6 h-16">
         {/* Logo & App Name */}
@@ -169,6 +192,7 @@ export default function Navbar() {
                   <User className="w-5 h-5 text-gray-200" />
                 </div>
               </button>
+
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 origin-top-right transition-all duration-200">
                   <div className="py-2 border-b border-gray-700">

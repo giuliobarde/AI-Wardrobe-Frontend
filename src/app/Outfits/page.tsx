@@ -19,9 +19,6 @@ import {
   ThumbsDown,
   RefreshCw,
   Heart,
-  Share2,
-  Filter,
-  Sliders,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 

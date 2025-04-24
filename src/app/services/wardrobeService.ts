@@ -126,3 +126,17 @@ export const checkItemInOutfits = async (token: string, itemId: string) => {
     throw error;
   }
 };
+
+export const favoriteUpdateSavedItem = async (item: any, token: string) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/edit_favorite_item/`,
+      item,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error: any) {
+      console.error("Failed to update favorite item:", error.response ? error.response.data : error.message);
+      throw error;
+  }
+};
