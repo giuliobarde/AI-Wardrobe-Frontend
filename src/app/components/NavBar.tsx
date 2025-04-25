@@ -75,7 +75,7 @@ export default function Navbar() {
     <nav
       className={`
         fixed top-0 left-0 w-full z-50 
-        transition-colors transition-shadow duration-300 ease-in-out
+        transition-shadow duration-300 ease-in-out
         ${scrolled
           ? "bg-gray-900 bg-opacity-95 shadow-lg"
           : "bg-gradient-to-r from-gray-900 to-gray-800 bg-opacity-75 backdrop-blur-md"

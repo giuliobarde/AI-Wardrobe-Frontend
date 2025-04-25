@@ -34,3 +34,38 @@ export const updateProfile = async (
     throw error;
   }
 };
+
+// Add this new function to userService.ts
+export const updateProfileImage = async (
+  token: string,
+  imageFile: File | null
+) => {
+  try {
+    const formData = new FormData();
+    
+    if (imageFile) {
+      formData.append("profile_image", imageFile);
+    } else {
+      // If null is passed, it means we want to remove the profile image
+      formData.append("remove_image", "true");
+    }
+    
+    const response = await axios.post(
+      `${API_BASE_URL}/update_profile_image/`,
+      formData,
+      {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Failed to update profile image:",
+      error.response ? error.response.data : error.message
+    );
+    throw error;
+  }
+};

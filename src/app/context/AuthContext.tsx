@@ -14,6 +14,7 @@ export interface UserData {
   username?: string;
   member_since?: string;
   gender?: string;
+  profile_image?: string;
 }
 
 export interface AuthContextType {
