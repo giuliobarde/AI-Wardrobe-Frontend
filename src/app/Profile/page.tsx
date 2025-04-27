@@ -4,6 +4,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/app/context/AuthContext";
 import { getAllUserItems } from "@/app/services/wardrobeService";
 import ItemCard from "../components/ItemCard";
@@ -47,6 +48,7 @@ export default function Profile() {
 
   const [activeTab, setActiveTab] = useState<"recent" | "favorites">("recent");
   const [refreshOutfits, setRefreshOutfits] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   // Redirect to home if not signed in
   useEffect(() => {
@@ -88,6 +90,11 @@ export default function Profile() {
     setLoadingOutfits(false);
   }, [user]);
 
+  // Reset image error state when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.profile_image_url]);
+
   // Initial load for items
   useEffect(() => {
     loadItems();
@@ -101,6 +108,11 @@ export default function Profile() {
   const ItemSkeleton = () => (
     <div className="bg-gray-100 rounded-lg animate-pulse h-44"></div>
   );
+
+  // Function to handle image loading errors
+  const handleImageError = () => {
+    setImageError(true);
+  };
 
   return (
     <div className="min-h-screen pt-20 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
@@ -119,10 +131,23 @@ export default function Profile() {
           <div className="bg-white rounded-xl shadow-xl p-6 mx-4 -mt-20 relative z-10">
             <div className="flex flex-col md:flex-row justify-between items-center md:items-end">
               <div className="flex flex-col md:flex-row items-center mb-4 md:mb-0">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 md:mb-0 md:mr-6 border-4 border-white shadow-md">
-                  {user?.first_name?.[0]}
-                  {user?.last_name?.[0]}
-                </div>
+                {/* Profile Image or Initials */}
+                {user?.profile_image_url && !imageError ? (
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md mb-4 md:mb-0 md:mr-6 relative">
+                    <Image 
+                      src={user.profile_image_url} 
+                      alt={`${user.first_name}'s profile`}
+                      fill
+                      className="object-cover"
+                      onError={handleImageError}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 md:mb-0 md:mr-6 border-4 border-white shadow-md">
+                    {user?.first_name?.[0]}
+                    {user?.last_name?.[0]}
+                  </div>
+                )}
                 <div className="text-center md:text-left">
                   <h1 className="text-3xl font-bold text-gray-800">
                     {user?.first_name} {user?.last_name}

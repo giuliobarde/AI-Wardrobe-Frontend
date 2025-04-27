@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { useAuth } from "@/app/context/AuthContext";
 import { updateProfile, updateProfileImage } from "@/app/services/userService";
 import {
@@ -15,11 +14,9 @@ import {
   HelpCircle,
   LogOut,
   Save,
-  X,
   CheckCircle,
   Upload,
   Trash2,
-  Camera
 } from "lucide-react";
 import ErrorModal from "@/app/components/ErrorModal";
 
@@ -34,7 +31,7 @@ export default function Settings() {
   const [username, setUsername] = useState(user?.username ?? "");
   const [gender, setGender] = useState(user?.gender ?? "");
   const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(user?.profile_image || null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(user?.profile_image_url || null);
   const [imageUpdateInProgress, setImageUpdateInProgress] = useState(false);
   const [updateError, setUpdateError] = useState("");
   const [updating, setUpdating] = useState(false);
@@ -55,7 +52,7 @@ export default function Settings() {
       setLastName(user.last_name ?? "");
       setUsername(user.username ?? "");
       setGender(user.gender ?? "");
-      setProfileImagePreview(user.profile_image || null);
+      setProfileImagePreview(user.profile_image_url || null);
     }
   }, [user]);
 

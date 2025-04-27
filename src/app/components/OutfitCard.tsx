@@ -290,10 +290,10 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
         {activeOutfit && (
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            animate={{ opacity: 1, pointerEvents: "auto" }}
+            exit={{ opacity: 0, pointerEvents: "none" }}
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
-          >
+          >   
             <motion.div
               ref={modalRef}
               layoutId={`outfit-${activeOutfit.id}-${layoutId}`}

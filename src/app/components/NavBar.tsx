@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/app/context/AuthContext";
@@ -20,8 +21,10 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
 
-  // true if we've scrolled past the “enter” threshold
+  // true if we've scrolled past the "enter" threshold
   const [scrolled, setScrolled] = useState(false);
+
+  const [imageError, setImageError] = useState(false);
 
   // Track scroll for background with throttling + hysteresis
   useEffect(() => {
@@ -69,6 +72,15 @@ export default function Navbar() {
   const handleLogout = async (e: React.FormEvent) => {
     e.preventDefault();
     logout();
+  };
+
+  // Reset image error state when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.profile_image_url]);
+
+  const handleImageError = () => {
+    setImageError(true);
   };
 
   return (
@@ -188,8 +200,21 @@ export default function Navbar() {
                 className="flex items-center space-x-3 px-3 py-1 border border-gray-700 rounded-full shadow-sm hover:bg-gray-700 focus:outline-none transition-colors"
               >
                 <Menu className="w-5 h-5 text-gray-200" />
-                <div className="flex items-center justify-center w-8 h-8 bg-gray-800 rounded-full hover:bg-gray-600">
-                  <User className="w-5 h-5 text-gray-200" />
+                <div className="relative w-7 h-7 rounded-full overflow-hidden">
+                  {user?.profile_image_url && !imageError ? (
+                    <Image 
+                      src={user.profile_image_url} 
+                      alt={`${user.first_name}'s profile`}
+                      fill
+                      sizes="32px"
+                      className="object-cover"
+                      onError={handleImageError}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full bg-gray-800">
+                      <User className="w-5 h-5 text-gray-200" />
+                    </div>
+                  )}
                 </div>
               </button>
 
@@ -198,7 +223,20 @@ export default function Navbar() {
                   <div className="py-2 border-b border-gray-700">
                     <div className="px-4 py-2 text-center">
                       <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 mb-2">
-                        <User className="h-6 w-6 text-white" />
+                        {user?.profile_image_url && !imageError ? (
+                          <div className="relative w-11 h-11 rounded-full overflow-hidden">
+                            <Image 
+                              src={user.profile_image_url} 
+                              alt={`${user.first_name}'s profile`}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                              onError={handleImageError}
+                            />
+                          </div>
+                        ) : (
+                          <User className="h-5 w-5 text-white" />
+                        )}
                       </div>
                       <p className="text-sm text-gray-300">Welcome back!</p>
                     </div>

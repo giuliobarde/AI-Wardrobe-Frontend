@@ -14,7 +14,7 @@ export interface UserData {
   username?: string;
   member_since?: string;
   gender?: string;
-  profile_image?: string;
+  profile_image_url?: string | null;
 }
 
 export interface AuthContextType {
@@ -68,6 +68,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         username: response.data.username,
         member_since: response.data.member_since,
         gender: response.data.gender,
+        profile_image_url: response.data.profile_image_url,
       };
 
       axios.defaults.headers.common["Authorization"] = `Bearer ${userData.access_token}`;
