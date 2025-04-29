@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { addSavedOutfit } from "@/app/services/outfitServices";
-import { displayClothingItem } from "@/app/services/wardrobeService";
+import { displayClothingItem } from "@/app/services/wardrobeServices";
 import { X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "@/app/hooks/use-outside-click";

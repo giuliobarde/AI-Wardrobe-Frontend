@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { addClothingItem } from "../services/wardrobeService";
+import { addClothingItem } from "../services/wardrobeServices";
 import { X, Plus, Loader2 } from "lucide-react";
 import SearchableDropdown from "./SearchableDropdown";
 import { AnimatePresence, motion } from "motion/react";

@@ -1,6 +1,7 @@
 import NavBar from "@/app/components/NavBar";
 import "./globals.css";
 import { AuthProvider } from "@/app/context/AuthContext";
+import { WardrobeProvider } from "@/app/context/WardrobeContext";
 
 export const metadata = {
   title: "AI Wardrobe",
@@ -16,8 +17,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <NavBar/>
-          {children}
+          <WardrobeProvider>
+            <NavBar/>
+            {children}
+          </WardrobeProvider>
         </AuthProvider>
       </body>
     </html>

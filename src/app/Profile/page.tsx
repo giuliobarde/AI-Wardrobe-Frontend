@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/app/context/AuthContext";
-import { getAllUserItems } from "@/app/services/wardrobeService";
+import { getAllUserItems } from "@/app/services/wardrobeServices";
 import ItemCard from "../components/ItemCard";
 import AddItem from "../components/AddItem";
 import {

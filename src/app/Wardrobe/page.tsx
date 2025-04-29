@@ -8,6 +8,7 @@ import ItemCard from "../components/ItemCard";
 import AddItem from "../components/AddItem";
 import ErrorModal from "@/app/components/ErrorModal";
 import { motion, AnimatePresence } from "framer-motion";
+import { WardrobeProvider } from "../context/WardrobeContext";
 
 type Category = {
   id: string;
@@ -15,7 +16,7 @@ type Category = {
   icon: string;
 };
 
-export default function Wardrobe() {
+function WardrobePage() {
   const [error, setError] = useState<string | null>(null);
   const { user, isLoading } = useAuth();
   const router = useRouter();
@@ -213,5 +214,13 @@ export default function Wardrobe() {
         </motion.div>
       </div>
     </motion.div>
+  );
+}
+
+export default function Wardrobe() {
+  return (
+    <WardrobeProvider>
+      <WardrobePage />
+    </WardrobeProvider>
   );
 }

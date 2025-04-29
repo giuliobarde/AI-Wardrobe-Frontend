@@ -1,36 +1,15 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useId } from "react";
+import React, { useId, useRef, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import {
-  deleteClothingItem,
-  displayClothingItem,
-  displayClothingItemById,
-  checkItemInOutfits,
-  favoriteUpdateSavedItem,
-} from "../services/wardrobeService";
+import { checkItemInOutfits } from "../services/wardrobeServices";
+import { useWardrobe, WardrobeItem } from "../context/WardrobeContext";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "../hooks/use-outside-click";
 import { X, Heart, Trash2, Tag, Thermometer, Calendar, Download, Share2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
-
-interface Item {
-  id: string;
-  user_id: string;
-  item_type: string;
-  material: string;
-  color: string;
-  formality: string;
-  pattern: string;
-  fit: string;
-  suitable_for_weather: string;
-  suitable_for_occasion: string;
-  sub_type: string;
-  image_link?: string;
-  favorite: any;
-}
 
 interface ItemCardProps {
   itemType?: string;
@@ -49,13 +28,18 @@ const ItemCard: React.FC<ItemCardProps> = ({
   thumbnail,
   onError,
 }) => {
-  const { user, isLoading } = useAuth();
-  const [items, setItems] = useState<Item[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [activeItem, setActiveItem] = useState<Item | null>(null);
-  const [favoriteItems, setFavoriteItems] = useState<Set<string>>(new Set()); // Track favorite items
+  const { user } = useAuth();
+  const { 
+    isLoading: contextLoading, 
+    getItemsByType, 
+    getItemById, 
+    toggleFavorite,
+    deleteItem 
+  } = useWardrobe();
+  
+  const [activeItem, setActiveItem] = useState<WardrobeItem | null>(null);
   const [favoriteAnimation, setFavoriteAnimation] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const layoutId = useId();
   const modalRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -66,65 +50,32 @@ const ItemCard: React.FC<ItemCardProps> = ({
   const [outfitsCount, setOutfitsCount] = useState(0);
 
   useOutsideClick(modalRef, () => setActiveItem(null));
+  
+  // Get items from context based on props
+  const items = React.useMemo(() => {
+    if (itemId) {
+      const item = getItemById(itemId);
+      return item ? [item] : [];
+    } else if (itemType) {
+      const filteredItems = getItemsByType(itemType);
+      return limit ? filteredItems.slice(0, limit) : filteredItems;
+    }
+    return [];
+  }, [itemType, itemId, getItemsByType, getItemById, limit, refresh]);
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      if (isLoading) return;
-      setLoading(true);
-      if (!user?.access_token) {
-        onError?.("User authentication failed. Please log in again.");
-        setLoading(false);
-        return;
-      }
-      try {
-        let fetched: Item[] = [];
-        if (itemId) {
-          const res = await displayClothingItemById(user.access_token, itemId);
-          fetched = res.data
-            ? Array.isArray(res.data)
-              ? res.data
-              : [res.data]
-            : [];
-        } else if (itemType) {
-          const res = await displayClothingItem(user.access_token, itemType);
-          fetched = res.data ?? [];
-        } else {
-          onError?.("No item id or item type provided.");
-          setLoading(false);
-          return;
-        }
-        setItems(limit ? fetched.slice(0, limit) : fetched);
-        setLoading(false);
-      } catch (err: any) {
-        onError?.("Failed to fetch items.");
-        setLoading(false);
-      }
-    };
-    fetchItems();
-  }, [user, itemType, itemId, limit, refresh, isLoading, onError]);
-
-  // Mock favorite functionality
-  const toggleFavorite = async (itemId: string, e?: React.MouseEvent) => {
+  // Handle favorite toggling
+  const handleToggleFavorite = async (itemId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!user?.access_token) {
-      setError("Please log in.");
+      onError?.("Please log in.");
       return;
     }
+    
     try {
-      await favoriteUpdateSavedItem({ id: itemId }, user.access_token);
-
-      // flip the favorite flag on the item in local state:
-      setItems((prev) =>
-        prev.map((it) =>
-          it.id === itemId ? { ...it, favorite: !it.favorite } : it
-        )
-      );
-      // if this card is the active modal item, flip it there too:
-      if (activeItem?.id === itemId) {
-        setActiveItem((it) => it && { ...it, favorite: !it.favorite });
-      }
-    } catch {
-      setError("Failed to update favorite.");
+      await toggleFavorite(itemId);
+      // No need to update local state as it's handled by the context
+    } catch (err) {
+      onError?.("Failed to update favorite.");
     }
   };
 
@@ -139,8 +90,12 @@ const ItemCard: React.FC<ItemCardProps> = ({
       onError?.("User authentication failed. Please log in again.");
       return;
     }
+    
     try {
+      setLoading(true);
       const cnt = await checkItemOutfits(id);
+      setLoading(false);
+      
       if (cnt > 0) {
         setOutfitsCount(cnt);
         setItemToDelete(id);
@@ -149,6 +104,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
         performDelete(id);
       }
     } catch {
+      setLoading(false);
       onError?.("Could not verify whether this item is in any outfits.");
     }
   };
@@ -158,9 +114,9 @@ const ItemCard: React.FC<ItemCardProps> = ({
       onError?.("User authentication failed. Please log in again.");
       return;
     }
+    
     try {
-      await deleteClothingItem(user.access_token, id, deleteOutfits);
-      setItems((prev) => prev.filter((i) => i.id !== id));
+      await deleteItem(id, deleteOutfits);
       setActiveItem(null);
     } catch {
       onError?.("Failed to delete item.");
@@ -210,7 +166,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
     return "bg-gray-100 text-gray-800";
   };
 
-  if (loading) {
+  if (contextLoading || loading) {
     return (
       <div className="flex justify-center items-center py-4">
         <div className="animate-pulse flex space-x-2">
@@ -263,7 +219,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
                 <motion.button
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.8 }}
-                  onClick={(e) => toggleFavorite(item.id, e)}
+                  onClick={(e) => handleToggleFavorite(item.id, e)}
                   className="absolute top-2 right-2 p-1 bg-white/80 rounded-full shadow-sm z-10 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   {item.favorite ? (
@@ -329,10 +285,10 @@ const ItemCard: React.FC<ItemCardProps> = ({
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={(e) => toggleFavorite(activeItem.id, e)}
+                    onClick={(e) => handleToggleFavorite(activeItem.id, e)}
                     className="p-2 rounded-full hover:bg-gray-100"
                   >
-                    {favoriteItems.has(activeItem.id) ? (
+                    {activeItem.favorite ? (
                       <Heart fill="currentColor" className="h-5 w-5 text-red-500" />
                     ) : (
                       <Heart className="h-5 w-5 text-gray-400 hover:text-red-500" />
