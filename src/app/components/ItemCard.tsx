@@ -391,7 +391,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
                     </motion.button>
                   </div>
                   
-                  {pathname !== "/Outfits" && (
+                  {pathname === "/Wardrobe" && (
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       onClick={() => initiateDelete(activeItem.id)}

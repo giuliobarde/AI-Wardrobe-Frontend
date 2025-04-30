@@ -1,27 +1,11 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useId } from "react";
-import { useAuth } from "@/app/context/AuthContext";
-import { getSavedOutfits, deleteSavedOutfit, favoriteUpdateSavedOutfit } from "../services/outfitServices";
 import { AnimatePresence, motion } from "framer-motion";
-import { useOutsideClick } from "../hooks/use-outside-click";
 import { X, Star, Trash2, Calendar, Clock } from "lucide-react";
+import { useOutsideClick } from "../hooks/use-outside-click";
+import { useOutfit, Outfit, OutfitItem } from "../context/OutfitContext";
 import ItemCard from "./ItemCard";
-
-interface OutfitItem {
-  item_id?: string;
-  id?: string;
-  type: string;
-}
-
-interface Outfit {
-  id: string;
-  user_id: string;
-  items: OutfitItem[];
-  occasion: string;
-  favorite: boolean;
-  created_at?: string;
-}
 
 interface OutfitCardProps {
   limit?: number;
@@ -29,42 +13,37 @@ interface OutfitCardProps {
 }
 
 const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
-  const { user, isLoading } = useAuth();
-  const [outfits, setOutfits] = useState<Outfit[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { 
+    outfits, 
+    isLoading, 
+    error, 
+    fetchOutfits, 
+    deleteOutfit, 
+    toggleFavorite 
+  } = useOutfit();
+  
+  const [displayOutfits, setDisplayOutfits] = useState<Outfit[]>([]);
   const [activeOutfit, setActiveOutfit] = useState<Outfit | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [favoriteAnimation, setFavoriteAnimation] = useState<string | null>(null);
   const layoutId = useId();
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Update displayed outfits when outfits change or refresh prop changes
   useEffect(() => {
-    const fetchOutfits = async () => {
-      if (isLoading) return;
-      if (!user?.access_token) {
-        setError("User authentication failed. Please log in again.");
-        return;
-      }
-      try {
-        const response = await getSavedOutfits(user.access_token);
-        let outfitsData: Outfit[] = [];
-        if (Array.isArray(response)) {
-          outfitsData = response;
-        } else if (response?.data && Array.isArray(response.data)) {
-          outfitsData = response.data;
-        }
-        if (limit) {
-          outfitsData = outfitsData.slice(0, limit);
-        }
-        setOutfits(outfitsData);
-        setError(null);
-      } catch (err) {
-        setError("Failed to fetch outfits");
-        console.error(err);
-      }
-    };
-    fetchOutfits();
-  }, [user, limit, refresh, isLoading]);
+    let outfitsToDisplay = [...outfits];
+    if (limit) {
+      outfitsToDisplay = outfitsToDisplay.slice(0, limit);
+    }
+    setDisplayOutfits(outfitsToDisplay);
+  }, [outfits, limit]);
+
+  // Refresh data when refresh prop changes
+  useEffect(() => {
+    if (refresh) {
+      fetchOutfits();
+    }
+  }, [refresh, fetchOutfits]);
 
   useOutsideClick(modalRef, () => setActiveOutfit(null));
 
@@ -83,45 +62,28 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
 
   // Function to toggle the favorite status.
   const handleToggleFavorite = async (outfitId: string) => {
-    if (!user?.access_token) {
-      setError("User authentication failed. Please log in again.");
-      return;
-    }
     try {
-      await favoriteUpdateSavedOutfit({ id: outfitId }, user.access_token);
+      await toggleFavorite(outfitId);
       setFavoriteAnimation(outfitId);
       setTimeout(() => setFavoriteAnimation(null), 1000);
       
-      setOutfits((prevOutfits) =>
-        prevOutfits.map((o) =>
-          o.id === outfitId ? { ...o, favorite: !o.favorite } : o
-        )
-      );
+      // No need to update state here as that's handled by the context
       if (activeOutfit && activeOutfit.id === outfitId) {
-        setActiveOutfit({ ...activeOutfit, favorite: !activeOutfit.favorite });
+        setActiveOutfit(prev => prev ? { ...prev, favorite: !prev.favorite } : null);
       }
     } catch (err) {
       console.error("Failed to toggle favorite:", err);
-      setError("Failed to update favorite status.");
     }
   };
 
-  // Function to delete the currently active outfit.
+  // Function to delete the outfit.
   const handleDeleteOutfit = async (outfitId: string) => {
-    if (!user?.access_token) {
-      setError("User authentication failed. Please log in again.");
-      return;
-    }
     try {
-      await deleteSavedOutfit({ id: outfitId }, user.access_token);
-      setOutfits((prevOutfits) =>
-        prevOutfits.filter((outfit) => outfit.id !== outfitId)
-      );
+      await deleteOutfit(outfitId);
       setActiveOutfit(null);
       setDeleteConfirm(null);
     } catch (err) {
       console.error("Failed to delete outfit:", err);
-      setError("Failed to delete outfit.");
     }
   };
 
@@ -164,7 +126,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
         </motion.div>
       )}
 
-      {outfits.length === 0 && !error && !isLoading && (
+      {displayOutfits.length === 0 && !error && !isLoading && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -183,7 +145,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
         animate={{ opacity: 1 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
       >
-        {outfits.map((outfit) => (
+        {displayOutfits.map((outfit) => (
           <motion.div
             key={outfit.id}
             layoutId={`outfit-card-${outfit.id}`}
