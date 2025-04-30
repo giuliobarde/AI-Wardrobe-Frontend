@@ -18,6 +18,10 @@ interface ItemCardProps {
   refresh?: number;
   thumbnail?: boolean;
   onError?: (msg: string) => void;
+  // Add a parent context identifier
+  parentContext?: string;
+  // Add a way to prevent modal from opening
+  disableModal?: boolean;
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({
@@ -27,6 +31,8 @@ const ItemCard: React.FC<ItemCardProps> = ({
   refresh,
   thumbnail,
   onError,
+  parentContext,
+  disableModal = false,
 }) => {
   const { user } = useAuth();
   const { 
@@ -40,7 +46,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
   const [activeItem, setActiveItem] = useState<WardrobeItem | null>(null);
   const [favoriteAnimation, setFavoriteAnimation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const layoutId = useId();
+  const uniqueId = useId();
   const modalRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
@@ -62,6 +68,13 @@ const ItemCard: React.FC<ItemCardProps> = ({
     }
     return [];
   }, [itemType, itemId, getItemsByType, getItemById, limit, refresh]);
+
+  // Generate a unique layoutId for each item
+  const getLayoutId = (id: string) => {
+    // Include parent context in the layoutId if provided
+    const contextPrefix = parentContext ? `${parentContext}-` : '';
+    return `item-card-${contextPrefix}${id}-${uniqueId}`;
+  };
 
   // Handle favorite toggling
   const handleToggleFavorite = async (itemId: string, e?: React.MouseEvent) => {
@@ -176,18 +189,29 @@ const ItemCard: React.FC<ItemCardProps> = ({
     );
   }
 
+  // Handle case where no items are found
+  if (items.length === 0) {
+    return (
+      <div className="flex justify-center items-center">
+        <div className="text-gray-400 text-sm">
+          Item not found
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <div className="flex flex-wrap gap-4 justify-center">
         {items.map((item) => (
           <motion.div
             key={item.id}
-            layoutId={thumbnail ? undefined : `item-card-${item.id}`}
+            layoutId={thumbnail ? undefined : getLayoutId(item.id)}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             whileHover={thumbnail ? {} : { y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-            onClick={() => !thumbnail && setActiveItem(item)}
+            onClick={() => !thumbnail && !disableModal && setActiveItem(item)}
             className={`relative group overflow-hidden ${
               thumbnail 
                 ? "min-w-[40px] h-[40px] rounded-md" 
@@ -203,6 +227,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
                   width={thumbnail ? 50 : 150}
                   height={thumbnail ? 50 : 150}
                   className={`object-cover ${thumbnail ? "w-full h-full" : "w-full h-28"}`}
+                  priority={true} // Add priority for faster loading
                 />
               ) : (
                 <div className={`bg-gray-50 flex items-center justify-center ${thumbnail ? "w-full h-full" : "w-full h-28"}`}>
@@ -249,7 +274,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
             )}
             
             {/* Hover overlay for non-thumbnail */}
-            {!thumbnail && (
+            {!thumbnail && !disableModal && (
               <motion.div 
                 initial={{ opacity: 0 }}
                 whileHover={{ opacity: 1 }}
@@ -262,9 +287,9 @@ const ItemCard: React.FC<ItemCardProps> = ({
         ))}
       </div>
 
-      {/* Detailed Item Modal */}
+      {/* Detailed Item Modal - Only render when not in thumbnail mode and modal is not disabled */}
       <AnimatePresence>
-        {activeItem && !thumbnail && (
+        {activeItem && !thumbnail && !disableModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -273,7 +298,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
           >
             <motion.div
               ref={modalRef}
-              layoutId={`item-card-${activeItem.id}`}
+              layoutId={getLayoutId(activeItem.id)}
               className="relative bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden"
             >
               {/* Modal Header */}
@@ -314,6 +339,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
                     width={400}
                     height={400}
                     className="object-contain mx-auto h-56 w-full"
+                    priority={true} // Add priority for faster loading
                   />
                 ) : (
                   <div className="h-56 flex items-center justify-center p-4 bg-gray-50">
