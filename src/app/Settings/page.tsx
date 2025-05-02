@@ -21,7 +21,7 @@ import {
 import ErrorModal from "@/app/components/ErrorModal";
 
 export default function Settings() {
-  const { user, isLoading, setUser } = useAuth();
+  const { user, isLoading, setUser, logout } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -177,6 +177,11 @@ export default function Settings() {
     { id: "help", icon: <HelpCircle size={20} />, label: "Help & Support" },
   ];
 
+  const handleLogout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    logout();
+  };
+
   return (
     <div className="min-h-screen pt-20 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
       {updateError && (
@@ -213,6 +218,7 @@ export default function Settings() {
                 ))}
 
                 <button
+                  onClick={handleLogout}
                   className="w-full flex items-center px-4 py-3 mt-4 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
                 >
                   <LogOut size={20} className="mr-3" />

@@ -8,7 +8,7 @@ import ItemCard from "../components/ItemCard";
 import AddItem from "../components/AddItem";
 import ErrorModal from "@/app/components/ErrorModal";
 import { motion, AnimatePresence } from "framer-motion";
-import { WardrobeProvider } from "../context/WardrobeContext";
+import { WardrobeProvider, useWardrobe } from "../context/WardrobeContext";
 
 type Category = {
   id: string;
@@ -20,18 +20,24 @@ function WardrobePage() {
   const [error, setError] = useState<string | null>(null);
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const { fetchItems } = useWardrobe();    // ← import fetchItems
+
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  // Redirect to home if not authenticated
+  // Redirect if not authenticated
   useEffect(() => {
     if (!isLoading && !user?.access_token) {
       router.push("/");
     }
   }, [user, isLoading, router]);
 
-  const handleItemAdded = () => {
-    setRefreshKey((prev) => prev + 1);
+  // When an item is added, re-fetch the entire list
+  const handleItemAdded = async () => {
+    try {
+      await fetchItems();
+    } catch (err: any) {
+      setError(err.message || "Failed to refresh items");
+    }
   };
 
   const dismissError = () => setError(null);
@@ -44,7 +50,6 @@ function WardrobePage() {
     { id: "outerware", label: "Outerware", icon: "🧥" },
   ];
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -56,16 +61,15 @@ function WardrobePage() {
   };
 
   const pageTransition = {
-    type: "tween",
-    ease: "easeInOut",
-    duration: 0.35
+    type: "tween" as const,
+    ease: "easeInOut" as const,
+    duration: 0.35,
   };
 
-  // Always-scrollable layout
   const containerClass = "flex space-x-4 overflow-x-auto py-2";
 
   const getCategoryContent = (categoryId: string | null) => {
-    if (categoryId === null || categoryId === "all") {
+    if (!categoryId || categoryId === "all") {
       return (
         <motion.div
           key="all-categories"
@@ -86,7 +90,6 @@ function WardrobePage() {
                   <ItemCard
                     itemType={category.id}
                     limit={100}
-                    refresh={refreshKey}
                     onError={setError}
                   />
                 </div>
@@ -96,8 +99,7 @@ function WardrobePage() {
       );
     }
 
-    const currentCategory = categories.find(c => c.id === categoryId);
-    
+    const current = categories.find((c) => c.id === categoryId);
     return (
       <motion.div
         key={`category-${categoryId}`}
@@ -107,14 +109,13 @@ function WardrobePage() {
         transition={pageTransition}
       >
         <h3 className="text-xl font-medium mb-4 flex items-center">
-          <span className="mr-2">{currentCategory?.icon}</span>
-          {currentCategory?.label}
+          <span className="mr-2">{current?.icon}</span>
+          {current?.label}
         </h3>
         <div className={containerClass}>
           <ItemCard
             itemType={categoryId}
             limit={100}
-            refresh={refreshKey}
             onError={setError}
           />
         </div>
@@ -146,7 +147,7 @@ function WardrobePage() {
           </p>
         </motion.div>
 
-        {/* Categories & Add Item Inline */}
+        {/* Categories & Add Item */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -176,7 +177,6 @@ function WardrobePage() {
             </motion.button>
           ))}
 
-          {/* Add Item pushed to the far right */}
           <motion.div variants={itemVariants} className="ml-auto">
             <AddItem onItemAdded={handleItemAdded} onError={setError} />
           </motion.div>
@@ -189,8 +189,7 @@ function WardrobePage() {
         >
           <h2 className="text-2xl font-semibold mb-6">
             {activeCategory
-              ? categories.find((c) => c.id === activeCategory)?.label ||
-                activeCategory
+              ? categories.find((c) => c.id === activeCategory)?.label
               : "All Items"}
           </h2>
 
@@ -206,7 +205,7 @@ function WardrobePage() {
           className="mt-8 text-center"
         >
           <p className="text-gray-500">
-            Need help organizing your wardrobe?{' '}
+            Need help organizing your wardrobe?{" "}
             <Link href="/help" className="text-blue-500 hover:underline">
               Check out our tips
             </Link>

@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { addClothingItem } from "../services/wardrobeServices";
-import { X, Plus, Loader2 } from "lucide-react";
+import { useWardrobe } from "../context/WardrobeContext"; // Import useWardrobe here
+import { X, Loader2 } from "lucide-react";
 import SearchableDropdown from "./SearchableDropdown";
 import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "../hooks/use-outside-click";
@@ -21,71 +21,92 @@ export const commonColors = [
   "Baby Blue", "Baby Pink", "Lavender", "Coral", "Mint Green", "Peach",
   "Mauve", "Sky Blue", "Charcoal", "Mustard", "Blush", "Emerald",
   "Rose Gold", "Champagne", "Chocolate", "Lilac", "Seafoam",
-  "Burnt Orange", "Forest Green", "Slate Gray"
+  "Burnt Orange", "Forest Green", "Slate Gray",
+  // ——— Jeans washes ———
+  "Light Wash", "Medium Wash", "Dark Wash", "Acid Wash",
+  "Black Denim", "White Denim"
 ];
+
+const allowedColorSet = new Set(commonColors.map(c => c.toLowerCase()));
 
 // ——— Other grouped options ———
 const itemTypeOptions = {
   tops: [
-    "blouse", "button-down shirt", "button-up shirt", "cardigan", 
-    "crewneck sweater", "hoodie", "jersey", "long sleeve t-shirt", 
-    "polo shirt", "shirt", "sweatshirt", "sweater", "tank top", 
-    "t-shirt", "turtleneck", "tuxedo shirt"
+    "blouse", "bodysuit", "button-down shirt", "button-up shirt",
+    "camisole", "cardigan", "crop top", "crewneck sweater", "dress shirt",
+    "halter top", "henley", "hoodie", "jersey", "kimono top",
+    "long sleeve t-shirt", "muscle tee", "peplum top", "polo shirt",
+    "shirt", "sleeveless top", "sweater", "sweatshirt", "tank top",
+    "thermal shirt", "tube top", "t-shirt", "tunic", "turtleneck",
+    "tuxedo shirt", "vest", "wrap top"
   ].sort(),
   bottoms: [
-    "chinos", "corduroys", "dress pants", "jeans", "leggings", 
-    "shorts", "skirt", "sweatpants", "tuxedo pants"
+    "bermuda shorts", "biker shorts", "capris", "cargo pants", "chinos",
+    "corduroys", "culottes", "denim shorts", "dress pants", "flare pants",
+    "gaucho pants", "harem pants", "hot pants", "jeggings", "jeans",
+    "joggers", "khakis", "leggings", "linen pants", "overalls",
+    "palazzo pants", "parachute pants", "pleated skirt", "shorts",
+    "skirt", "skort", "slacks", "sweatpants", "tuxedo pants", "trousers", 
+    "wrap skirt"
   ].sort(),
   shoes: [
-    "rain boots", "combat boots", "chelsea boots", "dress boots", 
-    "work boots", "thigh-high boots", "knee-high boots", "logger boots", 
-    "harness boots", "heel boots", "cowboy boots", "chukka boots", 
-    "hiking boots", "wingtip boots", "whole cut oxfords", "plain toe oxfords", 
-    "cap toe oxfords", "wing tip oxfords", "plain toe derbies", 
-    "cap toe derbies", "wing tip derbies", "single monk strap", 
-    "double monk strap", "triple monk strap", "kitten heels", 
-    "stiletto heels", "wedges", "platforms", "pennie loafers", 
-    "bit loafers", "tassle loafers", "kiltie loafers", "running shoes", 
-    "opera pumps", "ribbon pumps", "sandals", "sneakers"
+    "ankle boots", "athletic shoes", "ballet flats", "block heels",
+    "boat shoes", "brogues", "canvas shoes", "cap toe derbies", "cap toe oxfords",
+    "chelsea boots", "chukka boots", "clogs", "combat boots", "cowboy boots",
+    "crocs", "derbies", "dress boots", "espadrilles", "flat sandals", 
+    "flip flops", "harness boots", "heel boots", "hiking boots", "kiltie loafers",
+    "knee-high boots", "kitten heels", "loafers", "mary janes", "moccasins",
+    "monk strap", "mules", "opera pumps", "oxfords", "penny loafers", 
+    "platforms", "plain toe derbies", "plain toe oxfords", "ribbon pumps",
+    "riding boots", "saddle shoes", "sandals", "slingbacks", "sneakers",
+    "stilettos", "thigh-high boots", "triple monk strap", "wedges",
+    "wingtip boots", "wingtip derbies", "wingtip oxfords", "work boots"
   ].sort(),
   outerware: [
-    "bomber jacket", "denim jacket", "leather jacket", "overcoat", 
-    "puffer jacket", "raincoat", "suit jacket", "trench coat", "tuxedo jacket"
+    "anorak", "biker jacket", "blazer", "bomber jacket", "cape", 
+    "car coat", "coat", "denim jacket", "duffle coat", "field jacket",
+    "fleece jacket", "fur coat", "leather jacket", "overcoat", 
+    "parka", "pea coat", "poncho", "puffer jacket", "quilted jacket", 
+    "raincoat", "shearling jacket", "suit jacket", "trench coat",
+    "tuxedo blazer", "windbreaker", "wrap coat"
   ].sort(),
 };
 
 const materialOptions = {
-  cold: ["Cashmere","Corduroy","Fleece","Flannel","Vicuña","Wool"].sort(),
-  hot: ["Linen"],
-  all: ["Cotton","Silk","Synthetic","Virgin Wool","Velvet"].sort(),
-  non_rain: ["Leather","Patent Leather","Suede"].sort(),
-  rain: ["Rubber"].sort(),
+  cold: ["Alpaca", "Cashmere", "Corduroy", "Fleece", "Flannel", "Sherpa", "Tweed", "Vicuña", "Wool"].sort(),
+  hot: ["Bamboo", "Chambray", "Linen", "Rayon", "Seersucker"].sort(),
+  all: ["Cotton", "Denim", "Jersey", "Lycra", "Modal", "Nylon", "Polyester", "Silk", "Spandex", "Tencel", "Viscose", "Velvet", "Virgin Wool"].sort(),
+  non_rain: ["Faux Leather", "Leather", "Patent Leather", "Suede"].sort(),
+  rain: ["PVC", "Rubber", "Vinyl"].sort(),
 };
 
 const weatherOptions = {
-  cold: ["Cold","Very Cold"].sort(),
-  moderate: ["All","Moderate","No Rain","Warm"].sort(),
-  hot: ["Hot","Very Hot"].sort(),
-  rainy: ["Drizzly","Rainy"].sort(),
+  cold: ["Cold", "Very Cold", "Snowy", "Windy"].sort(),
+  moderate: ["All", "Cool", "Mild", "Moderate", "No Rain", "Warm"].sort(),
+  hot: ["Hot", "Very Hot", "Humid", "Dry Heat"].sort(),
+  rainy: ["Drizzly", "Rainy", "Thunderstorms", "Monsoon"].sort(),
 };
 
 const fitOptions = {
-  very_formal: ["Tailored Fit"],
-  formal: ["Fit","Slim"].sort(),
-  somewhat_formal: ["Regular"],
-  not_formal: ["Baggy","Skinny"].sort(),
+  very_formal: ["Tailored Fit", "Slim Tailored"],
+  formal: ["Fit", "Slim", "Modern Fit"],
+  somewhat_formal: ["Regular", "Classic Fit", "Standard"],
+  not_formal: ["Baggy", "Relaxed", "Skinny", "Oversized", "Loose"]
 };
 
 const formalityOptions = {
-  formalities: ["High","Low","Very Low","Very High","Medium","Somewhat High"].sort(),
+  formalities: ["Very Low", "Low", "Somewhat Low", "Medium", "Somewhat High", "High", "Very High", "Business Casual", "Smart Casual", "Casual", "Business Formal", "Cocktail", "Black Tie", "White Tie"].sort(),
 };
 
 const patternsOptions = {
   patterns: [
-    "Abstract","Animal Print","Argyle","Checkered","Floral",
-    "Geometric","Gingham","Herringbone","Houndstooth","Paisley",
-    "Pinstripe","Plaid","Polka Dot","Solid","Striped",
-    "Tie-Dye","Windowpane"
+    "Abstract", "Animal Print", "Argyle", "Baroque", "Camouflage", 
+    "Checkered", "Chevron", "Color Block", "Damask", "Floral", 
+    "Geometric", "Gingham", "Gradient", "Graphic", "Grid", 
+    "Herringbone", "Houndstooth", "Leopard", "Microprint", 
+    "Ombre", "Paisley", "Pinstripe", "Plaid", "Polka Dot", 
+    "Solid", "Striped", "Tartan", "Tie-Dye", "Tropical", 
+    "Windowpane", "Zebra Print"
   ].sort(),
 };
 
@@ -98,6 +119,7 @@ interface QualitySettings {
   fit?: string;
   pattern?: string;
 }
+
 const qualitySettingsMap: Record<string, QualitySettings> = {
   "tuxedo shirt": {
     material: "cotton",
@@ -116,6 +138,7 @@ const qualitySettingsMap: Record<string, QualitySettings> = {
 
 export default function AddItem({ onItemAdded, onError }: AddItemProps) {
   const { user } = useAuth();
+  const { addItem } = useWardrobe(); // Use the addItem function from context
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showGeneratingNotice, setShowGeneratingNotice] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -183,6 +206,21 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
       onError?.(msg);
       return;
     }
+    if (!color) {
+      const msg = "Please select a color.";
+      setLocalError(msg);
+      onError?.(msg);
+      return;
+    }
+    if (!allowedColorSet.has(color.toLowerCase())) {
+      const msg = "Please select a valid color from the list.";
+      setLocalError(msg);
+      onError?.(msg);
+      return;
+    }
+    if (!pattern) {
+      setPattern("solid")
+    }
     if (!user?.access_token) {
       const msg = "Please log in again.";
       onError?.(msg);
@@ -204,10 +242,11 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
 
     try {
       setIsSubmitting(true);
-      await addClothingItem(payload, user.access_token);
+      // Use addItem from WardrobeContext instead of direct API call
+      await addItem(payload);
       closeModal();
       onItemAdded();
-    } catch {
+    } catch (error: any) {
       const msg = "Failed to add item. Please try again.";
       setLocalError(msg);
       onError?.(msg);

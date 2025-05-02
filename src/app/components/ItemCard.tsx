@@ -390,7 +390,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
                 <div className="mb-4">
                   <div className="flex items-center mb-2">
                     <Thermometer className="h-4 w-4 mr-2 text-blue-500" />
-                    <span className="text-sm font-medium">Suitable for {activeItem.suitable_for_weather}</span>
+                    <span className="text-sm font-medium">Suitable for {activeItem.suitable_for_weather} weather</span>
                   </div>
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-2 text-green-500" />

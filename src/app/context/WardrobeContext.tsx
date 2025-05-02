@@ -38,6 +38,10 @@ interface WardrobeContextType {
   deleteItem: (id: string, deleteOutfits?: boolean) => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
   clearCache: () => void;
+  // New callback for outfit refresh
+  onItemsChanged: () => void;
+  registerOutfitRefreshCallback: (callback: () => void) => void;
+  unregisterOutfitRefreshCallback: (callback: () => void) => void;
 }
 
 const WardrobeContext = createContext<WardrobeContextType | undefined>(undefined);
@@ -56,10 +60,27 @@ export function WardrobeProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetched, setLastFetched] = useState<number>(0);
+  // Array to store outfit refresh callbacks
+  const [outfitRefreshCallbacks, setOutfitRefreshCallbacks] = useState<(() => void)[]>([]);
   
   // Cache duration in milliseconds (e.g., 5 minutes)
   const CACHE_DURATION = 5 * 60 * 1000;
   const STORAGE_KEY = 'wardrobe_items_cache';
+
+  // Register a callback to be called when items change
+  const registerOutfitRefreshCallback = (callback: () => void) => {
+    setOutfitRefreshCallbacks(prev => [...prev, callback]);
+  };
+
+  // Unregister a callback
+  const unregisterOutfitRefreshCallback = (callback: () => void) => {
+    setOutfitRefreshCallbacks(prev => prev.filter(cb => cb !== callback));
+  };
+
+  // Function to trigger all registered outfit refresh callbacks
+  const onItemsChanged = () => {
+    outfitRefreshCallbacks.forEach(callback => callback());
+  };
 
   // Load from localStorage on initial mount
   useEffect(() => {
@@ -121,6 +142,9 @@ export function WardrobeProvider({ children }: { children: ReactNode }) {
       setItems(fetchedItems);
       setLastFetched(Date.now());
       setIsLoading(false);
+      
+      // Notify outfit components about the change
+      onItemsChanged();
     } catch (err: any) {
       setError(err.message || "Failed to fetch wardrobe items");
       setIsLoading(false);
@@ -129,7 +153,12 @@ export function WardrobeProvider({ children }: { children: ReactNode }) {
 
   // Get items filtered by type
   const getItemsByType = (type: string) => {
-    return items.filter(item => item.item_type.toLowerCase() === type.toLowerCase());
+    const desired = type.toLowerCase();
+    return items.filter(item =>
+      // only compare if item_type exists
+      typeof item.item_type === "string" &&
+      item.item_type.toLowerCase() === desired
+    );
   };
 
   // Get a single item by ID
@@ -149,6 +178,10 @@ export function WardrobeProvider({ children }: { children: ReactNode }) {
       
       // Update local state with the new item
       setItems(prevItems => [...prevItems, newItem]);
+      
+      // Notify outfit components about the change
+      onItemsChanged();
+      
       return newItem;
     } catch (err: any) {
       throw new Error(err.message || "Failed to add item");
@@ -167,6 +200,9 @@ export function WardrobeProvider({ children }: { children: ReactNode }) {
       
       // Then perform the actual API call
       await deleteClothingItem(user.access_token, id, deleteOutfits);
+      
+      // Notify outfit components about the change
+      onItemsChanged();
     } catch (err: any) {
       // Revert the optimistic update if the API call fails
       await fetchItems();
@@ -190,6 +226,10 @@ export function WardrobeProvider({ children }: { children: ReactNode }) {
       
       // Make API call
       await favoriteUpdateSavedItem({ id }, user.access_token);
+      
+      // Notify outfit components about the change if needed
+      // Uncomment if outfit components need to react to favorite changes
+      // onItemsChanged();
     } catch (err: any) {
       // Revert on failure
       await fetchItems();
@@ -214,7 +254,10 @@ export function WardrobeProvider({ children }: { children: ReactNode }) {
     addItem,
     deleteItem,
     toggleFavorite,
-    clearCache
+    clearCache,
+    onItemsChanged,
+    registerOutfitRefreshCallback,
+    unregisterOutfitRefreshCallback
   };
 
   return (
