@@ -20,7 +20,7 @@ function WardrobePage() {
   const [error, setError] = useState<string | null>(null);
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const { fetchItems } = useWardrobe();    // ← import fetchItems
+  const { fetchItems } = useWardrobe();
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 

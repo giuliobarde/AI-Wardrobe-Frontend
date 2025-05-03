@@ -120,6 +120,8 @@ export function OutfitProvider({ children }: { children: ReactNode }) {
       setOutfits(fetchedOutfits);
       setLastFetched(Date.now());
       setIsLoading(false);
+
+
     } catch (err: any) {
       setError(err.message || "Failed to fetch outfits");
       setIsLoading(false);
@@ -148,6 +150,10 @@ export function OutfitProvider({ children }: { children: ReactNode }) {
       
       // Update local state with the new outfit
       setOutfits(prevOutfits => [...prevOutfits, newOutfit]);
+      setLastFetched(Date.now());
+
+      await fetchOutfits();
+
       return newOutfit;
     } catch (err: any) {
       throw new Error(err.message || "Failed to add outfit");
@@ -166,6 +172,8 @@ export function OutfitProvider({ children }: { children: ReactNode }) {
       
       // Then perform the actual API call
       await deleteSavedOutfit({ id }, user.access_token);
+
+      await fetchOutfits();
     } catch (err: any) {
       // Revert the optimistic update if the API call fails
       await fetchOutfits();

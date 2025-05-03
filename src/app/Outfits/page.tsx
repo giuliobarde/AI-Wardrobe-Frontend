@@ -1,23 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { addSavedOutfit } from "@/app/services/outfitServices";
 import { useRouter } from "next/navigation";
-import CreateOutfit from "../components/CreateOutfit";
 import { generateChatOutfit } from "@/app/services/openAIServices";
+import { addSavedOutfit } from "@/app/services/outfitServices";
+import { useOutfit, OutfitProvider } from "../context/OutfitContext";
+import CreateOutfit from "../components/CreateOutfit";
 import OutfitCard from "../components/OutfitCard";
 import ItemCard from "../components/ItemCard";
 import {
   Loader2,
   Plus,
-  Save,
   Search,
   Star,
   Sparkles,
+  RefreshCw,
   ThumbsUp,
   ThumbsDown,
-  RefreshCw,
   Heart,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,34 +27,36 @@ interface OutfitItem {
   item_type?: string;
 }
 
-interface Outfit {
+interface GeneratedOutfit {
   outfit_items: OutfitItem[];
   occasion: string;
   description: string;
 }
 
-export default function OutfitsPage() {
+function OutfitsPageContent() {
   const { user } = useAuth();
   const router = useRouter();
+  const { fetchOutfits } = useOutfit();
+
   const [activeTab, setActiveTab] = useState<"generate" | "saved">("generate");
   const [occasion, setOccasion] = useState("");
-  const [outfit, setOutfit] = useState<Outfit | null>(null);
+  const [generated, setGenerated] = useState<GeneratedOutfit | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showCreateOutfitModal, setShowCreateOutfitModal] = useState(false);
-  const [refreshOutfits, setRefreshOutfits] = useState(0);
-  const [suggestions] = useState<string[]>([
+  const [error, setError] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [animateGen, setAnimateGen] = useState(false);
+
+  const suggestions = [
     "Beach day",
     "Date night",
     "Job interview",
     "Wedding guest",
     "Casual Friday",
     "Gym workout",
-  ]);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [animateGenerate, setAnimateGenerate] = useState(false);
+  ];
 
-  // On mount, read hash and select tab
+  // On mount, pick up URL hash
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash.replace("#", "");
@@ -64,7 +66,13 @@ export default function OutfitsPage() {
     }
   }, []);
 
-  // When switching tabs, update URL hash
+  // Animate the generate button
+  useEffect(() => {
+    if (!animateGen) return;
+    const t = setTimeout(() => setAnimateGen(false), 2000);
+    return () => clearTimeout(t);
+  }, [animateGen]);
+
   const selectTab = (tab: "generate" | "saved") => {
     setActiveTab(tab);
     if (typeof window !== "undefined") {
@@ -72,75 +80,85 @@ export default function OutfitsPage() {
     }
   };
 
-  useEffect(() => {
-    if (animateGenerate) {
-      const t = setTimeout(() => setAnimateGenerate(false), 2000);
-      return () => clearTimeout(t);
-    }
-  }, [animateGenerate]);
+  const dismissError = () => setError(null);
 
-  const handleSuggestionClick = (s: string) => setOccasion(s);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setAnimateGen(true);
     setLoading(true);
-    setError("");
-    setAnimateGenerate(true);
+
     if (!user?.access_token) {
       setError("Please log in again.");
       setLoading(false);
       return;
     }
+
     try {
-      const data = await generateChatOutfit(user.access_token, occasion);
-      setOutfit(data.response);
-    } catch (err) {
-      console.error(err);
+      const { response } = await generateChatOutfit(
+        user.access_token,
+        occasion
+      );
+      setGenerated(response);
+    } catch {
       setError("Failed to generate outfit.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const saveGeneratedOutfit = async () => {
-    if (!outfit?.outfit_items.length) {
-      setError("No outfit to save");
+  const saveGenerated = async () => {
+    if (!generated?.outfit_items.length) {
+      setError("No outfit to save.");
       return;
     }
-    const items = outfit.outfit_items.map((it) => ({
+    if (!user?.access_token) {
+      setError("Please log in again.");
+      return;
+    }
+
+    const items = generated.outfit_items.map((it) => ({
       id: it.id,
       type: it.item_type || "unknown",
     }));
-    const payload = {
-      user_id: user?.user_id,
-      items,
-      occasion: outfit.occasion || "General",
-      favourite: false,
-    };
+
     try {
-      await addSavedOutfit(payload, user!.access_token);
-      setRefreshOutfits((p) => p + 1);
+      await addSavedOutfit(
+        {
+          user_id: user.user_id,
+          items,
+          occasion: generated.occasion,
+          favorite: false,
+        },
+        user.access_token
+      );
+      // Refresh the saved outfits list
+      await fetchOutfits();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError("Failed to save outfit.");
     }
   };
 
-  const regenerateOutfit = async () => {
+  const regenerate = async () => {
     if (!occasion) {
-      setError("Please enter an occasion first");
+      setError("Please enter an occasion first.");
       return;
     }
+    setError(null);
     setLoading(true);
-    setError("");
     try {
-      const data = await generateChatOutfit(user!.access_token, occasion);
-      setOutfit(data.response);
+      const { response } = await generateChatOutfit(
+        user?.access_token!,
+        occasion
+      );
+      setGenerated(response);
     } catch {
       setError("Failed to regenerate outfit.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -150,7 +168,7 @@ export default function OutfitsPage() {
         <div className="flex space-x-8">
           <button
             onClick={() => selectTab("generate")}
-            className={`py-4 px-1 font-medium text-lg transition-colors relative ${
+            className={`py-4 px-1 font-medium text-lg relative ${
               activeTab === "generate"
                 ? "text-blue-600 border-b-2 border-blue-600"
                 : "text-gray-500 hover:text-gray-800"
@@ -166,7 +184,7 @@ export default function OutfitsPage() {
           </button>
           <button
             onClick={() => selectTab("saved")}
-            className={`py-4 px-1 font-medium text-lg transition-colors relative ${
+            className={`py-4 px-1 font-medium text-lg relative ${
               activeTab === "saved"
                 ? "text-blue-600 border-b-2 border-blue-600"
                 : "text-gray-500 hover:text-gray-800"
@@ -183,6 +201,7 @@ export default function OutfitsPage() {
         </div>
       </div>
 
+      {/* Generate Tab */}
       {activeTab === "generate" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -190,12 +209,11 @@ export default function OutfitsPage() {
           transition={{ duration: 0.5 }}
           className="space-y-8"
         >
-          {/* Form */}
           <div className="bg-white shadow-md rounded-lg p-6 border border-gray-100">
-            <h1 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent relative">
+            <h1 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Outfit Recommendations
             </h1>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleGenerate} className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
@@ -212,7 +230,7 @@ export default function OutfitsPage() {
                   <button
                     key={i}
                     type="button"
-                    onClick={() => handleSuggestionClick(s)}
+                    onClick={() => setOccasion(s)}
                     className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition"
                   >
                     {s}
@@ -223,7 +241,7 @@ export default function OutfitsPage() {
                 type="submit"
                 disabled={loading}
                 className={`w-full py-3 ${
-                  animateGenerate
+                  animateGen
                     ? "bg-gradient-to-r from-purple-500 to-pink-500"
                     : "bg-gradient-to-r from-blue-500 to-blue-700"
                 } text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-70 transition`}
@@ -241,14 +259,11 @@ export default function OutfitsPage() {
                 )}
               </button>
             </form>
-            {error && (
-              <p className="mt-4 text-red-600 text-center">{error}</p>
-            )}
+            {error && <p className="mt-4 text-red-600 text-center">{error}</p>}
           </div>
 
-          {/* Generated Outfit */}
           <AnimatePresence>
-            {outfit && (
+            {generated && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -258,21 +273,20 @@ export default function OutfitsPage() {
               >
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold text-gray-800">
-                    Your{" "}
-                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                      {outfit.occasion}
-                    </span>{" "}
+                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm mr-2">
+                      {generated.occasion}
+                    </span>
                     Outfit
                   </h2>
                   <button
-                    onClick={regenerateOutfit}
+                    onClick={regenerate}
                     className="p-2 text-gray-500 hover:text-blue-600 transition"
                   >
                     <RefreshCw />
                   </button>
                 </div>
                 <p className="italic text-gray-700 mb-6">
-                  {outfit.description}
+                  {generated.description}
                 </p>
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex space-x-2">
@@ -284,31 +298,24 @@ export default function OutfitsPage() {
                     </button>
                   </div>
                   <button
-                    onClick={saveGeneratedOutfit}
+                    onClick={saveGenerated}
                     className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                   >
-                    {saveSuccess ? <span>✔ Saved!</span> : <span>Save Outfit</span>}
+                    {saveSuccess ? "✔ Saved!" : "Save Outfit"}
                   </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {outfit.outfit_items.map((it, i) => (
+                  {generated.outfit_items.map((it) => (
                     <ItemCard key={it.id} itemId={it.id} />
                   ))}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Loading */}
-          {loading && !outfit && (
-            <div className="text-center py-12">
-              <Loader2 className="animate-spin text-blue-600 w-12 h-12 mx-auto" />
-              <p className="mt-4 text-gray-600">Crafting the perfect outfit…</p>
-            </div>
-          )}
         </motion.div>
       )}
 
+      {/* Saved Tab */}
       {activeTab === "saved" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -322,16 +329,14 @@ export default function OutfitsPage() {
               Your Saved Outfits
             </h2>
             <button
-              onClick={() => setShowCreateOutfitModal(true)}
+              onClick={() => setShowCreate(true)}
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
               <Plus className="mr-2" /> Create New
             </button>
           </div>
 
-          <div className="grid gap-6">
-            <OutfitCard key={refreshOutfits} />
-          </div>
+          <OutfitCard />
 
           {!user && (
             <div className="text-center py-10">
@@ -348,12 +353,15 @@ export default function OutfitsPage() {
         </motion.div>
       )}
 
+      {/* Create Outfit Modal */}
       <CreateOutfit
-        show={showCreateOutfitModal}
-        onClose={() => setShowCreateOutfitModal(false)}
+        show={showCreate}
+        onClose={() => setShowCreate(false)}
         onOutfitAdded={() => {
-          setRefreshOutfits((p) => p + 1);
+          setShowCreate(false);
           selectTab("saved");
+          // only fetch when a new outfit is added
+          fetchOutfits();
         }}
       />
 
@@ -363,5 +371,13 @@ export default function OutfitsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OutfitsPage() {
+  return (
+    <OutfitProvider>
+      <OutfitsPageContent />
+    </OutfitProvider>
   );
 }
