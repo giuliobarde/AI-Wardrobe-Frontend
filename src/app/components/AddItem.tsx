@@ -2,11 +2,12 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
-import { useWardrobe } from "../context/WardrobeContext"; // Import useWardrobe here
+import { useWardrobe } from "../context/WardrobeContext";
 import { X, Loader2 } from "lucide-react";
 import SearchableDropdown from "./SearchableDropdown";
 import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "../hooks/use-outside-click";
+import ErrorModal from "./ErrorModal";
 
 type AddItemProps = {
   onItemAdded: () => void;
@@ -153,7 +154,10 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
   const [fit, setFit] = useState("");
   const [formality, setFormality] = useState("");
   const [pattern, setPattern] = useState("");
-  const [localError, setLocalError] = useState<string | null>(null);
+  
+  // Error handling state
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   useOutsideClick(modalRef, () => setModalOpen(false));
 
@@ -172,8 +176,19 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
   const closeModal = useCallback(() => {
     setItemType(""); setSubType(""); setMaterial("");
     setColor(""); setFit(""); setFormality("");
-    setPattern(""); setLocalError(null);
+    setPattern(""); setErrorMessage(null);
     setModalOpen(false);
+  }, []);
+
+  const handleError = useCallback((msg: string) => {
+    setErrorMessage(msg);
+    setShowErrorModal(true);
+    if (onError) onError(msg);
+  }, [onError]);
+
+  const closeErrorModal = useCallback(() => {
+    setShowErrorModal(false);
+    setErrorMessage(null);
   }, []);
 
   // Dropdown handlers
@@ -199,31 +214,29 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalError(null);
+    setErrorMessage(null);
+    
     if (!itemType || !subType) {
-      const msg = "Please select an item type.";
-      setLocalError(msg);
-      onError?.(msg);
+      handleError("Please select an item type.");
       return;
     }
+    
     if (!color) {
-      const msg = "Please select a color.";
-      setLocalError(msg);
-      onError?.(msg);
+      handleError("Please select a color.");
       return;
     }
+    
     if (!allowedColorSet.has(color.toLowerCase())) {
-      const msg = "Please select a valid color from the list.";
-      setLocalError(msg);
-      onError?.(msg);
+      handleError("Please select a valid color from the list.");
       return;
     }
+    
     if (!pattern) {
-      setPattern("solid")
+      setPattern("solid");
     }
+    
     if (!user?.access_token) {
-      const msg = "Please log in again.";
-      onError?.(msg);
+      handleError("Please log in again.");
       return;
     }
 
@@ -247,9 +260,7 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
       closeModal();
       onItemAdded();
     } catch (error: any) {
-      const msg = "Failed to add item. Please try again.";
-      setLocalError(msg);
-      onError?.(msg);
+      handleError("Failed to add item. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -372,12 +383,6 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
                   </div>
                 </div>
 
-                {localError && (
-                  <div className="bg-red-50 p-3 rounded-md">
-                    <p className="text-red-600 text-sm">{localError}</p>
-                  </div>
-                )}
-
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -408,6 +413,13 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Error Modal */}
+      <ErrorModal 
+        isOpen={showErrorModal}
+        message={errorMessage || ""}
+        onClose={closeErrorModal}
+      />
     </>
   );
 }

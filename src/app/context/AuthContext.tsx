@@ -79,6 +79,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       router.push("/Wardrobe");
     } catch (error: any) {
       console.error("Login failed:", error.response ? error.response.data : error.message);
+      
+      // Create an error object with Firebase-like error codes for compatibility
+      const customError: any = new Error(
+        error.response?.data?.detail || 
+        error.response?.data?.message || 
+        "Authentication failed"
+      );
+      
+      // Map backend errors to Firebase-like error codes that LoginModal expects
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        customError.code = "auth/wrong-password";
+      } else if (error.response?.status === 404) {
+        customError.code = "auth/user-not-found";
+      } else if (error.response?.status === 429) {
+        customError.code = "auth/too-many-requests";
+      } else if (error.response?.data?.detail?.includes("email")) {
+        customError.code = "auth/invalid-email";
+      } else {
+        customError.code = "auth/unknown";
+      }
+      
+      // This is crucial: throw the error so it can be caught by the component
+      throw customError;
     }
   };
 

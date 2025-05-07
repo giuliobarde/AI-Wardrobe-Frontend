@@ -18,35 +18,50 @@ const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setSho
   const [email, setEmail] = useState("soccerstar17@gmail.com");
   const [password, setPassword] = useState("megmeg");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Error handling state
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  
   const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     try {
       await login(email, password);
       setModalOpen(false);
-      router.push("/");
+      // Note: We don't need to explicitly redirect here as AuthContext will handle it
     } catch (err: any) {
+      console.error("Login error caught in component:", err);
+      
       // Set specific error messages based on error code
+      let message: string;
+      
       if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
-        setError("Invalid email or password. Please try again.");
+        message = "Invalid email or password. Please try again.";
       } else if (err.code === "auth/too-many-requests") {
-        setError("Too many failed login attempts. Please try again later or reset your password.");
+        message = "Too many failed login attempts. Please try again later or reset your password.";
       } else if (err.code === "auth/invalid-email") {
-        setError("Invalid email format. Please enter a valid email address.");
+        message = "Invalid email format. Please enter a valid email address.";
       } else {
-        setError(err.message || "Login failed. Please try again later.");
+        message = err.message || "Login failed. Please try again later.";
       }
-      console.error(err);
+      
+      setErrorMessage(message);
+      setShowErrorModal(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Function to close the error modal
   const handleCloseError = () => {
-    setError(null);
+    setShowErrorModal(false);
+    setErrorMessage(null);
   };
 
   return (
@@ -87,6 +102,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setSho
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -106,12 +122,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setSho
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
               <button
                 type="button"
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                disabled={isLoading}
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -132,6 +150,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setSho
                 // This is a placeholder - you would typically show a password reset modal or navigate to a reset page
                 alert("Password reset functionality will be implemented here");
               }}
+              disabled={isLoading}
             >
               Forgot your password?
             </button>
@@ -140,9 +159,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setSho
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full py-3 px-4 mt-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-md shadow hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-150"
+            className={`w-full py-3 px-4 mt-2 text-white font-medium rounded-md shadow transition-all duration-150 ${
+              isLoading 
+                ? "bg-gray-400 cursor-not-allowed" 
+                : "bg-gradient-to-r from-blue-500 to-purple-600 hover:shadow-md transform hover:-translate-y-0.5"
+            }`}
+            disabled={isLoading}
           >
-            Sign In
+            {isLoading ? "Signing In..." : "Sign In"}
           </button>
 
           {/* Sign Up Link */}
@@ -155,6 +179,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setSho
                 setModalOpen(false);
               }}
               className="text-blue-500 hover:text-blue-700 font-medium transition-colors"
+              disabled={isLoading}
             >
               Sign up here
             </button>
@@ -162,7 +187,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setSho
         </form>
 
         {/* Error Modal */}
-        {error && <ErrorModal error={error} onClose={handleCloseError} />}
+        <ErrorModal 
+          isOpen={showErrorModal}
+          title="Login Error"
+          message={errorMessage || ""}
+          onClose={handleCloseError}
+        />
       </div>
     </div>
   );
