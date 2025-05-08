@@ -10,6 +10,7 @@ import { useOutsideClick } from "../hooks/use-outside-click";
 import { X, Heart, Trash2, Tag, Thermometer, Calendar, Download, Share2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
+import ErrorModal from "./ErrorModal";
 
 interface ItemCardProps {
   itemType?: string;
@@ -54,6 +55,10 @@ const ItemCard: React.FC<ItemCardProps> = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [outfitsCount, setOutfitsCount] = useState(0);
+  
+  // Error modal state
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useOutsideClick(modalRef, () => setActiveItem(null));
   
@@ -76,11 +81,22 @@ const ItemCard: React.FC<ItemCardProps> = ({
     return `item-card-${contextPrefix}${id}-${uniqueId}`;
   };
 
+  // Handle error display
+  const handleError = (message: string) => {
+    setErrorMessage(message);
+    setErrorModalOpen(true);
+    
+    // Also call the onError prop if provided
+    if (onError) {
+      onError(message);
+    }
+  };
+
   // Handle favorite toggling
   const handleToggleFavorite = async (itemId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!user?.access_token) {
-      onError?.("Please log in.");
+      handleError("Please log in.");
       return;
     }
     
@@ -88,7 +104,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
       await toggleFavorite(itemId);
       // No need to update local state as it's handled by the context
     } catch (err) {
-      onError?.("Failed to update favorite.");
+      handleError("Failed to update favorite.");
     }
   };
 
@@ -100,7 +116,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
 
   const initiateDelete = async (id: string) => {
     if (!user?.access_token) {
-      onError?.("User authentication failed. Please log in again.");
+      handleError("User authentication failed. Please log in again.");
       return;
     }
     
@@ -118,13 +134,13 @@ const ItemCard: React.FC<ItemCardProps> = ({
       }
     } catch {
       setLoading(false);
-      onError?.("Could not verify whether this item is in any outfits.");
+      handleError("Could not verify whether this item is in any outfits.");
     }
   };
 
   const performDelete = async (id: string, deleteOutfits = false) => {
     if (!user?.access_token) {
-      onError?.("User authentication failed. Please log in again.");
+      handleError("User authentication failed. Please log in again.");
       return;
     }
     
@@ -132,7 +148,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
       await deleteItem(id, deleteOutfits);
       setActiveItem(null);
     } catch {
-      onError?.("Failed to delete item.");
+      handleError("Failed to delete item.");
     }
   };
 
@@ -434,6 +450,14 @@ const ItemCard: React.FC<ItemCardProps> = ({
         )}
       </AnimatePresence>
 
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={errorModalOpen}
+        message={errorMessage}
+        onClose={() => setErrorModalOpen(false)}
+      />
+
+      {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={showDeleteModal}
         itemId={itemToDelete || ""}
