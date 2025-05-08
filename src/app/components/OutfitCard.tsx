@@ -6,6 +6,7 @@ import { X, Star, Trash2, Calendar, Clock } from "lucide-react";
 import { useOutsideClick } from "../hooks/use-outside-click";
 import { useOutfit, Outfit, OutfitItem } from "../context/OutfitContext";
 import ItemCard from "./ItemCard";
+import ErrorModal from "./ErrorModal";
 
 interface OutfitCardProps {
   limit?: number;
@@ -26,6 +27,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
   const [activeOutfit, setActiveOutfit] = useState<Outfit | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [favoriteAnimation, setFavoriteAnimation] = useState<string | null>(null);
+  const [errorModalOpen, setErrorModalOpen] = useState<boolean>(false); // State for error modal visibility
   const layoutId = useId();
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +46,13 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
       fetchOutfits();
     }
   }, [refresh, fetchOutfits]);
+
+  // Show error modal when error state changes
+  useEffect(() => {
+    if (error) {
+      setErrorModalOpen(true);
+    }
+  }, [error]);
 
   useOutsideClick(modalRef, () => setActiveOutfit(null));
 
@@ -116,15 +125,13 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
 
   return (
     <div className="relative">
-      {error && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r"
-        >
-          <p className="text-red-500 font-medium">{error}</p>
-        </motion.div>
-      )}
+      {/* Error Modal Component */}
+      <ErrorModal 
+        isOpen={errorModalOpen}
+        title="Outfit Error"
+        message={error || "An error occurred while loading outfits."}
+        onClose={() => setErrorModalOpen(false)}
+      />
 
       {displayOutfits.length === 0 && !error && !isLoading && (
         <motion.div 

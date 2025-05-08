@@ -25,15 +25,16 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ modalOpen, setModalOpen, setS
   const [gender, setGender] = useState<GenderOption>("prefer-not-to-say");
   
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const { signup } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-
+    
     if (password !== confirmPassword) {
-      setError("Passwords do not match. Please make sure both passwords are identical.");
+      setErrorMessage("Passwords do not match. Please make sure both passwords are identical.");
+      setIsErrorModalOpen(true);
       return;
     }
 
@@ -44,14 +45,15 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ modalOpen, setModalOpen, setS
     } catch (err: any) {
       // Set the error message based on the error
       if (err.code === "auth/email-already-in-use") {
-        setError("This email is already registered. Please try logging in instead.");
+        setErrorMessage("This email is already registered. Please try logging in instead.");
       } else if (err.code === "auth/weak-password") {
-        setError("Password is too weak. Please use at least 6 characters including numbers and symbols.");
+        setErrorMessage("Password is too weak. Please use at least 6 characters including numbers and symbols.");
       } else if (err.code === "auth/invalid-email") {
-        setError("Invalid email format. Please enter a valid email address.");
+        setErrorMessage("Invalid email format. Please enter a valid email address.");
       } else {
-        setError(err.message || "Sign up failed. Please try again later.");
+        setErrorMessage(err.message || "Sign up failed. Please try again later.");
       }
+      setIsErrorModalOpen(true);
       console.error(err);
     }
   };
@@ -65,7 +67,7 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ modalOpen, setModalOpen, setS
 
   // Function to close the error modal
   const handleCloseError = () => {
-    setError(null);
+    setIsErrorModalOpen(false);
   };
 
   return (
@@ -267,7 +269,12 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ modalOpen, setModalOpen, setS
         </form>
 
         {/* Error Modal */}
-        {error && <ErrorModal error={error} onClose={handleCloseError} />}
+        <ErrorModal 
+          isOpen={isErrorModalOpen}
+          title="Sign Up Error"
+          message={errorMessage || ""}
+          onClose={handleCloseError}
+        />
       </div>
     </div>
   );
