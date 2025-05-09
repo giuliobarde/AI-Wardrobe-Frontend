@@ -6,6 +6,7 @@ import { generateChatOutfit } from "@/app/services/openAIServices";
 import { addSavedOutfit } from "@/app/services/outfitServices";
 import { useOutfit } from "../../context/OutfitContext";
 import ItemCard from "../ItemCard";
+import ErrorModal from "../ErrorModal";
 import {
   Loader2,
   Search,
@@ -37,6 +38,8 @@ const GenerateOutfitTab = () => {
   const [error, setError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [animateGen, setAnimateGen] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
 
   const suggestions = [
     "Beach day",
@@ -54,6 +57,11 @@ const GenerateOutfitTab = () => {
     return () => clearTimeout(t);
   }, [animateGen]);
 
+  const showErrorModal = (message: string) => {
+    setErrorModalMessage(message);
+    setIsErrorModalOpen(true);
+  };
+
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -61,7 +69,7 @@ const GenerateOutfitTab = () => {
     setLoading(true);
 
     if (!user?.access_token) {
-      setError("Please log in again.");
+      showErrorModal("Please log in again.");
       setLoading(false);
       return;
     }
@@ -72,8 +80,9 @@ const GenerateOutfitTab = () => {
         occasion
       );
       setGenerated(response);
-    } catch {
-      setError("Failed to generate outfit.");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to generate outfit.";
+      showErrorModal(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -81,11 +90,11 @@ const GenerateOutfitTab = () => {
 
   const saveGenerated = async () => {
     if (!generated?.outfit_items.length) {
-      setError("No outfit to save.");
+      showErrorModal("No outfit to save.");
       return;
     }
     if (!user?.access_token) {
-      setError("Please log in again.");
+      showErrorModal("Please log in again.");
       return;
     }
 
@@ -108,14 +117,15 @@ const GenerateOutfitTab = () => {
       await fetchOutfits();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch {
-      setError("Failed to save outfit.");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to save outfit.";
+      showErrorModal(errorMessage);
     }
   };
 
   const regenerate = async () => {
     if (!occasion) {
-      setError("Please enter an occasion first.");
+      showErrorModal("Please enter an occasion first.");
       return;
     }
     setError(null);
@@ -126,8 +136,9 @@ const GenerateOutfitTab = () => {
         occasion
       );
       setGenerated(response);
-    } catch {
-      setError("Failed to regenerate outfit.");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to regenerate outfit.";
+      showErrorModal(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -249,6 +260,13 @@ const GenerateOutfitTab = () => {
           Outfit saved successfully!
         </div>
       )}
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={isErrorModalOpen}
+        message={errorModalMessage}
+        onClose={() => setIsErrorModalOpen(false)}
+      />
     </motion.div>
   );
 };

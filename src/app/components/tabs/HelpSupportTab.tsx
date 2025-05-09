@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ErrorModal from "../ErrorModal";
 
 type FAQItem = {
   question: string;
@@ -8,6 +9,10 @@ type FAQItem = {
 const HelpSupportTab: React.FC = () => {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalTitle, setModalTitle] = useState("Error");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const faqs: FAQItem[] = [
     {
@@ -24,14 +29,45 @@ const HelpSupportTab: React.FC = () => {
     }
   ];
 
-  const handleSubmitRequest = (e: React.FormEvent) => {
+  const showModal = (title: string, message: string) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setIsErrorModalOpen(true);
+  };
+
+  const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle support request submission logic here
-    console.log("Support request submitted:", { subject, message });
-    // Reset form
-    setSubject("");
-    setMessage("");
-    // Show success message or other feedback to user
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call with a timeout
+      await new Promise<void>((resolve, reject) => {
+        setTimeout(() => {
+          // For demo purposes, randomly succeed or fail
+          if (Math.random() > 0.3) {
+            resolve();
+          } else {
+            reject(new Error("Network error. Please try again later."));
+          }
+        }, 1000);
+      });
+      
+      console.log("Support request submitted:", { subject, message });
+      
+      // Reset form on success
+      setSubject("");
+      setMessage("");
+      
+      // Show success message
+      showModal("Success", "Your support request has been submitted successfully. We'll get back to you soon!");
+      
+    } catch (err) {
+      // Show error message
+      const errorMessage = err instanceof Error ? err.message : "Failed to submit support request. Please try again.";
+      showModal("Error", errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -94,13 +130,32 @@ const HelpSupportTab: React.FC = () => {
             </div>
             <button 
               type="submit"
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg transition hover:opacity-90"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg transition hover:opacity-90 disabled:opacity-70 flex items-center justify-center"
             >
-              Submit Request
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Submitting...
+                </>
+              ) : (
+                "Submit Request"
+              )}
             </button>
           </form>
         </div>
       </div>
+
+      {/* Error/Success Modal */}
+      <ErrorModal
+        isOpen={isErrorModalOpen}
+        title={modalTitle}
+        message={modalMessage}
+        onClose={() => setIsErrorModalOpen(false)}
+      />
     </>
   );
 };

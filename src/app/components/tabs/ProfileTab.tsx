@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { User, Save, CheckCircle, Upload, Trash2 } from "lucide-react";
 import { updateProfile, updateProfileImage } from "@/app/services/userService";
+import ErrorModal from "../ErrorModal"; // Import the ErrorModal component
 
 interface ProfileTabProps {
   user: any;
@@ -20,6 +21,10 @@ export default function ProfileTab({ user, setUser }: ProfileTabProps) {
   const [updating, setUpdating] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Error modal state
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Update form fields when user data changes
   useEffect(() => {
@@ -61,6 +66,9 @@ export default function ProfileTab({ user, setUser }: ProfileTabProps) {
       setTimeout(() => setUpdateSuccess(false), 3000);
     } catch (error: any) {
       setUpdateError(error.message);
+      // Show error in modal instead of inline
+      setErrorMessage(error.message);
+      setIsErrorModalOpen(true);
     }
 
     setUpdating(false);
@@ -102,6 +110,9 @@ export default function ProfileTab({ user, setUser }: ProfileTabProps) {
         setTimeout(() => setUpdateSuccess(false), 3000);
       } catch (error: any) {
         setUpdateError(error.message);
+        // Show error in modal
+        setErrorMessage(error.message);
+        setIsErrorModalOpen(true);
       } finally {
         setImageUpdateInProgress(false);
       }
@@ -132,6 +143,9 @@ export default function ProfileTab({ user, setUser }: ProfileTabProps) {
       setTimeout(() => setUpdateSuccess(false), 3000);
     } catch (error: any) {
       setUpdateError(error.message);
+      // Show error in modal
+      setErrorMessage(error.message);
+      setIsErrorModalOpen(true);
     } finally {
       setImageUpdateInProgress(false);
     }
@@ -316,6 +330,14 @@ export default function ProfileTab({ user, setUser }: ProfileTabProps) {
           </button>
         </div>
       </form>
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={isErrorModalOpen}
+        message={errorMessage}
+        onClose={() => setIsErrorModalOpen(false)}
+        title="Profile Update Error"
+      />
     </>
   );
 }
