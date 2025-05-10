@@ -1,13 +1,37 @@
+"use client";
+
 import React, { useState } from "react";
+import ErrorModal from "../ErrorModal";
 
 export default function SecurityTab() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  // Add state for error modal
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Function to handle showing error
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setErrorModalOpen(true);
+  };
 
   const handleUpdatePassword = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate passwords
+    if (newPassword !== confirmPassword) {
+      showError("New passwords don't match. Please try again.");
+      return;
+    }
+    
+    if (newPassword.length < 8) {
+      showError("Password must be at least 8 characters long.");
+      return;
+    }
+    
     setIsUpdating(true);
     
     // Simulate API call
@@ -16,7 +40,9 @@ export default function SecurityTab() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      // Show success message or handle errors
+      // Example of API error handling
+      // Uncomment to test error modal:
+      // showError("Failed to update password. Please try again.");
     }, 1500);
   };
 
@@ -88,7 +114,10 @@ export default function SecurityTab() {
           <p className="text-gray-600 mb-4">
             Add an extra layer of security to your account by enabling two-factor authentication.
           </p>
-          <button className="px-4 py-2 bg-gray-900 text-white rounded-lg transition hover:bg-gray-800">
+          <button 
+            className="px-4 py-2 bg-gray-900 text-white rounded-lg transition hover:bg-gray-800"
+            onClick={() => showError("Two-factor authentication setup is not available yet.")}
+          >
             Set Up Two-Factor
           </button>
         </div>
@@ -98,11 +127,21 @@ export default function SecurityTab() {
           <p className="text-gray-600 mb-4">
             You're currently logged in on 1 device.
           </p>
-          <button className="px-4 py-2 border border-red-500 text-red-500 rounded-lg transition hover:bg-red-50">
+          <button 
+            className="px-4 py-2 border border-red-500 text-red-500 rounded-lg transition hover:bg-red-50"
+            onClick={() => showError("This feature is currently under maintenance.")}
+          >
             Log Out All Devices
           </button>
         </div>
       </div>
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={errorModalOpen}
+        message={errorMessage}
+        onClose={() => setErrorModalOpen(false)}
+      />
     </>
   );
 }
