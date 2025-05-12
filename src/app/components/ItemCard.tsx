@@ -23,6 +23,8 @@ interface ItemCardProps {
   parentContext?: string;
   // Add a way to prevent modal from opening
   disableModal?: boolean;
+  // Add a flag to only show favorite items
+  favorite?: boolean;
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({
@@ -34,6 +36,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
   onError,
   parentContext,
   disableModal = false,
+  favorite = false,
 }) => {
   const { user } = useAuth();
   const { 
@@ -62,17 +65,22 @@ const ItemCard: React.FC<ItemCardProps> = ({
 
   useOutsideClick(modalRef, () => setActiveItem(null));
   
-  // Get items from context based on props
+  // Get items from context based on props, with optional favorites filtering
   const items = React.useMemo(() => {
     if (itemId) {
       const item = getItemById(itemId);
-      return item ? [item] : [];
+      // If favorite is true, only return the item if it's a favorite
+      return (item && (!favorite || item.favorite)) ? [item] : [];
     } else if (itemType) {
       const filteredItems = getItemsByType(itemType);
-      return limit ? filteredItems.slice(0, limit) : filteredItems;
+      // If favorite is true, only return favorite items
+      const items = favorite 
+        ? filteredItems.filter(item => item.favorite) 
+        : filteredItems;
+      return limit ? items.slice(0, limit) : items;
     }
     return [];
-  }, [itemType, itemId, getItemsByType, getItemById, limit, refresh]);
+  }, [itemType, itemId, getItemsByType, getItemById, limit, refresh, favorite]);
 
   // Generate a unique layoutId for each item
   const getLayoutId = (id: string) => {
@@ -210,7 +218,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
     return (
       <div className="flex justify-center items-center">
         <div className="text-gray-400 text-sm">
-          Item not found
+          {favorite ? "No favorite items found" : "Item not found"}
         </div>
       </div>
     );

@@ -18,6 +18,7 @@ type Category = {
 
 function WardrobePage() {
   const [error, setError] = useState<string | null>(null);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const { fetchItems } = useWardrobe();
@@ -31,6 +32,13 @@ function WardrobePage() {
     }
   }, [user, isLoading, router]);
 
+  // Handle errors by opening the modal
+  useEffect(() => {
+    if (error) {
+      setIsErrorModalOpen(true);
+    }
+  }, [error]);
+
   // When an item is added, re-fetch the entire list
   const handleItemAdded = async () => {
     try {
@@ -40,10 +48,18 @@ function WardrobePage() {
     }
   };
 
-  const dismissError = () => setError(null);
+  const dismissError = () => {
+    setIsErrorModalOpen(false);
+    setError(null);
+  };
+
+  const handleError = (errorMessage: string) => {
+    setError(errorMessage);
+  };
 
   const categories: Category[] = [
     { id: "all", label: "All Items", icon: "🧳" },
+    { id: "favorites", label: "Favorites", icon: "⭐" },
     { id: "tops", label: "Tops", icon: "👕" },
     { id: "bottoms", label: "Bottoms", icon: "👖" },
     { id: "shoes", label: "Shoes", icon: "👟" },
@@ -79,7 +95,7 @@ function WardrobePage() {
           transition={pageTransition}
         >
           {categories
-            .filter((cat) => cat.id !== "all")
+            .filter((cat) => cat.id !== "all" && cat.id !== "favorites")
             .map((category) => (
               <div key={category.id} className="mb-8 last:mb-0">
                 <h3 className="text-xl font-medium mb-4 flex items-center">
@@ -90,7 +106,38 @@ function WardrobePage() {
                   <ItemCard
                     itemType={category.id}
                     limit={100}
-                    onError={setError}
+                    onError={handleError}
+                  />
+                </div>
+              </div>
+            ))}
+        </motion.div>
+      );
+    }
+    
+    if (categoryId === "favorites") {
+      return (
+        <motion.div
+          key="favorites-categories"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={pageTransition}
+        >
+          {categories
+            .filter((cat) => cat.id !== "all" && cat.id !== "favorites")
+            .map((category) => (
+              <div key={category.id} className="mb-8 last:mb-0">
+                <h3 className="text-xl font-medium mb-4 flex items-center">
+                  <span className="mr-2">{category.icon}</span>
+                  {category.label}
+                </h3>
+                <div className={containerClass}>
+                  <ItemCard
+                    itemType={category.id}
+                    limit={100}
+                    onError={handleError}
+                    favorite={true}
                   />
                 </div>
               </div>
@@ -116,7 +163,7 @@ function WardrobePage() {
           <ItemCard
             itemType={categoryId}
             limit={100}
-            onError={setError}
+            onError={handleError}
           />
         </div>
       </motion.div>
@@ -130,7 +177,11 @@ function WardrobePage() {
       transition={{ duration: 0.5 }}
       className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-20 px-4 sm:px-6 lg:px-8"
     >
-      {error && <ErrorModal error={error} onClose={dismissError} />}
+      <ErrorModal 
+        isOpen={isErrorModalOpen}
+        message={error || "An unknown error occurred"}
+        onClose={dismissError}
+      />
 
       <div className="max-w-7xl mx-auto">
         <motion.div
@@ -178,7 +229,7 @@ function WardrobePage() {
           ))}
 
           <motion.div variants={itemVariants} className="ml-auto">
-            <AddItem onItemAdded={handleItemAdded} onError={setError} />
+            <AddItem onItemAdded={handleItemAdded} onError={handleError} />
           </motion.div>
         </motion.div>
 
@@ -188,9 +239,11 @@ function WardrobePage() {
           className="bg-white rounded-xl shadow-md p-6 overflow-hidden"
         >
           <h2 className="text-2xl font-semibold mb-6">
-            {activeCategory
-              ? categories.find((c) => c.id === activeCategory)?.label
-              : "All Items"}
+            {activeCategory === "favorites" 
+              ? "Favorite Items"
+              : activeCategory
+                ? categories.find((c) => c.id === activeCategory)?.label
+                : "All Items"}
           </h2>
 
           <AnimatePresence mode="wait">
