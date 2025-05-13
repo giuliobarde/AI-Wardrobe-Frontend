@@ -1,4 +1,3 @@
-// app/profile/page.tsx
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -16,6 +15,7 @@ import {
   Clock,
   User,
   CalendarDays,
+  Heart,
 } from "lucide-react";
 import ErrorModal from "@/app/components/ErrorModal";
 import OutfitCard from "../components/OutfitCard";
@@ -24,6 +24,7 @@ import { getSavedOutfits } from "../services/outfitServices";
 interface ClothingItem {
   id: string;
   added_date?: string;
+  favorite?: boolean;
 }
 
 interface Outfit {
@@ -38,13 +39,17 @@ export default function Profile() {
   // ITEMS state
   const [allItems, setAllItems] = useState<ClothingItem[]>([]);
   const [recentItems, setRecentItems] = useState<ClothingItem[]>([]);
+  const [favoriteItems, setFavoriteItems] = useState<ClothingItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [itemsError, setItemsError] = useState("");
+  const [isItemsErrorModalOpen, setIsItemsErrorModalOpen] = useState(false);
 
   // OUTFITS state
   const [allOutfits, setAllOutfits] = useState<Outfit[]>([]);
+  const [displayOutfits, setDisplayOutfits] = useState<Outfit[]>([]);
   const [loadingOutfits, setLoadingOutfits] = useState(false);
   const [outfitsError, setOutfitsError] = useState("");
+  const [isOutfitsErrorModalOpen, setIsOutfitsErrorModalOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"recent" | "favorites">("recent");
   const [refreshOutfits, setRefreshOutfits] = useState(0);
@@ -62,14 +67,24 @@ export default function Profile() {
     if (!user?.access_token) return;
     setLoadingItems(true);
     setItemsError("");
+    setIsItemsErrorModalOpen(false);
     try {
       const itemsResponse = await getAllUserItems(user.access_token);
       const itemsData = itemsResponse.data as ClothingItem[];
+      
+      // Set all items
       setAllItems(itemsData);
-      setRecentItems(itemsData.slice(0, 8));
+      
+      // Set recent items - get the 4 most recent
+      setRecentItems(itemsData.slice(0, 4));
+      
+      // Filter favorites
+      const favorites = itemsData.filter(item => item.favorite === true);
+      setFavoriteItems(favorites);
     } catch (err: any) {
       console.error(err);
       setItemsError("Failed to load items.");
+      setIsItemsErrorModalOpen(true);
     }
     setLoadingItems(false);
   }, [user]);
@@ -79,6 +94,7 @@ export default function Profile() {
     if (!user?.access_token) return;
     setLoadingOutfits(true);
     setOutfitsError("");
+    setIsOutfitsErrorModalOpen(false);
     try {
       // getSavedOutfits already returns Outfit[]
       const outfitsData = await getSavedOutfits(user.access_token);
@@ -86,6 +102,7 @@ export default function Profile() {
     } catch (err: any) {
       console.error(err);
       setOutfitsError("Failed to load outfits.");
+      setIsOutfitsErrorModalOpen(true);
     }
     setLoadingOutfits(false);
   }, [user]);
@@ -116,13 +133,17 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen pt-20 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
-      {/* Errors */}
-      {itemsError && (
-        <ErrorModal error={itemsError} onClose={() => setItemsError("")} />
-      )}
-      {outfitsError && (
-        <ErrorModal error={outfitsError} onClose={() => setOutfitsError("")} />
-      )}
+      {/* Error Modals */}
+      <ErrorModal 
+        isOpen={isItemsErrorModalOpen} 
+        message={itemsError} 
+        onClose={() => setIsItemsErrorModalOpen(false)} 
+      />
+      <ErrorModal 
+        isOpen={isOutfitsErrorModalOpen} 
+        message={outfitsError} 
+        onClose={() => setIsOutfitsErrorModalOpen(false)} 
+      />
 
       <div className="max-w-6xl mx-auto px-4">
         {/* Profile Header */}
@@ -189,7 +210,7 @@ export default function Profile() {
                 <p className="text-gray-600">Outfits</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-3xl font-bold text-green-600">5</p>
+                <p className="text-3xl font-bold text-green-600">{favoriteItems.length}</p>
                 <p className="text-gray-600">Favorites</p>
               </div>
               <div className="bg-amber-50 p-4 rounded-lg">
@@ -222,28 +243,14 @@ export default function Profile() {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              {/* heart icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="mr-2"
-              >
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-              </svg>
+              <Heart size={18} className="mr-2" />
               Favorites
             </button>
           </div>
 
           {loadingItems ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, idx) => (
+              {[...Array(4)].map((_, idx) => (
                 <ItemSkeleton key={idx} />
               ))}
             </div>
@@ -260,23 +267,10 @@ export default function Profile() {
               </p>
               <AddItem onItemAdded={loadItems} />
             </div>
-          ) : activeTab === "favorites" ? (
+          ) : activeTab === "favorites" && favoriteItems.length === 0 ? (
             <div className="flex flex-col items-center py-12">
               <div className="bg-purple-50 p-6 rounded-full mb-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="48"
-                  height="48"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-purple-500"
-                >
-                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                </svg>
+                <Heart size={48} className="text-purple-500" />
               </div>
               <p className="text-xl font-medium text-gray-700 mb-2">
                 No favorites yet
@@ -284,11 +278,24 @@ export default function Profile() {
               <p className="text-gray-500 mb-6 text-center max-w-md">
                 Mark items as favorites to see them here
               </p>
+              <Link
+                href="/Wardrobe"
+                className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-medium hover:opacity-90 transition transform hover:scale-105 shadow-md"
+              >
+                Go to Wardrobe
+                <ChevronRight size={18} className="ml-1" />
+              </Link>
             </div>
-          ) : (
+          ) : activeTab === "recent" ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mb-6">
               {recentItems.map((item) => (
                 <ItemCard key={item.id} itemId={item.id} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mb-6">
+              {favoriteItems.map((item) => (
+                <ItemCard key={item.id} itemId={item.id} favorite={true} />
               ))}
             </div>
           )}
@@ -300,6 +307,18 @@ export default function Profile() {
                 className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-medium hover:opacity-90 transition transform hover:scale-105 shadow-md"
               >
                 View All Items
+                <ChevronRight size={18} className="ml-1" />
+              </Link>
+            </div>
+          )}
+          
+          {activeTab === "favorites" && favoriteItems.length > 0 && (
+            <div className="text-center mt-6">
+              <Link
+                href="/Wardrobe?filter=favorites"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-full font-medium hover:opacity-90 transition transform hover:scale-105 shadow-md"
+              >
+                View All Favorites
                 <ChevronRight size={18} className="ml-1" />
               </Link>
             </div>
@@ -320,7 +339,6 @@ export default function Profile() {
           </div>
 
           <div className="grid gap-6">
-            {/* you can swap this out for mapping your recent outfits if desired */}
             <OutfitCard key={refreshOutfits} />
           </div>
         </div>

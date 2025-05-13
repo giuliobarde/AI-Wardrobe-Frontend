@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
 import ItemCard from "../components/ItemCard";
@@ -21,6 +21,7 @@ function WardrobePage() {
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { fetchItems } = useWardrobe();
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -31,6 +32,14 @@ function WardrobePage() {
       router.push("/");
     }
   }, [user, isLoading, router]);
+
+  // Check for filter parameter in URL and set the active category accordingly
+  useEffect(() => {
+    const filterParam = searchParams.get('filter');
+    if (filterParam) {
+      setActiveCategory(filterParam);
+    }
+  }, [searchParams]);
 
   // Handle errors by opening the modal
   useEffect(() => {
@@ -83,6 +92,18 @@ function WardrobePage() {
   };
 
   const containerClass = "flex space-x-4 overflow-x-auto py-2";
+
+  // Update URL when category changes
+  const handleCategoryChange = (categoryId: string | null) => {
+    if (categoryId === null) {
+      // Reset to all items
+      router.push('/Wardrobe');
+    } else {
+      // Update URL with the selected filter
+      router.push(`/Wardrobe?filter=${categoryId}`);
+    }
+    setActiveCategory(categoryId);
+  };
 
   const getCategoryContent = (categoryId: string | null) => {
     if (!categoryId || categoryId === "all") {
@@ -212,7 +233,7 @@ function WardrobePage() {
               whileHover={{ y: -3, boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}
               whileTap={{ y: 0 }}
               onClick={() =>
-                setActiveCategory(
+                handleCategoryChange(
                   category.id === "all" ? null : category.id
                 )
               }
