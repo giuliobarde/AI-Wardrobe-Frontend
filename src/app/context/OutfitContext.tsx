@@ -87,6 +87,22 @@ export function OutfitProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.access_token]);
 
+  // Add event listener for outfit refresh
+  useEffect(() => {
+    // Listen for refresh-outfits events (e.g., when items are deleted)
+    const handleRefreshOutfits = () => {
+      console.log("Refreshing outfits due to item changes");
+      fetchOutfits();
+    };
+    
+    window.addEventListener('refresh-outfits', handleRefreshOutfits);
+    
+    // Clean up event listener on unmount
+    return () => {
+      window.removeEventListener('refresh-outfits', handleRefreshOutfits);
+    };
+  }, []);
+
   // Save to localStorage whenever outfits change
   useEffect(() => {
     if (outfits.length > 0 && lastFetched > 0) {

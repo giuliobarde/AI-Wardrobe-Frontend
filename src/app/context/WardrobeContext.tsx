@@ -203,6 +203,14 @@ export function WardrobeProvider({ children }: { children: ReactNode }) {
       
       // Notify outfit components about the change
       onItemsChanged();
+      
+      // Force refresh the outfits context if available
+      try {
+        // Use window to access global event system
+        window.dispatchEvent(new CustomEvent('refresh-outfits'));
+      } catch (err) {
+        console.error("Failed to refresh outfits:", err);
+      }
     } catch (err: any) {
       // Revert the optimistic update if the API call fails
       await fetchItems();
