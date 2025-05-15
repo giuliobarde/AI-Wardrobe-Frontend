@@ -4,6 +4,16 @@ import React, { createContext, ReactNode, useState, useContext, useEffect } from
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
+export interface WeatherData {
+  temperature: number;
+  description: string;
+  feels_like: number;
+  humidity: number;
+  wind_speed: number;
+  location: string;
+  timestamp: string;
+}
+
 export interface UserData {
   email: string;
   user_id: string;
@@ -15,6 +25,7 @@ export interface UserData {
   member_since?: string;
   gender?: string;
   profile_image_url?: string | null;
+  weather?: WeatherData | null;
 }
 
 export interface AuthContextType {
@@ -69,7 +80,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         member_since: response.data.member_since,
         gender: response.data.gender,
         profile_image_url: response.data.profile_image_url,
+        weather: response.data.weather
       };
+
+      // Store weather data in a separate localStorage item for easy access
+      if (userData.weather) {
+        localStorage.setItem("weatherData", JSON.stringify(userData.weather));
+      }
 
       axios.defaults.headers.common["Authorization"] = `Bearer ${userData.access_token}`;
       localStorage.setItem("token", userData.access_token);
@@ -207,6 +224,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       router.push("/");
     }
   }, [user, router, isLoading]);
+
+  // Update weather data periodically
+  useEffect(() => {
+    if (!user) return;
+    
+    // Weather updates are now handled by WeatherContext
+    // This code is kept as a fallback but can be removed once WeatherContext is fully tested
+    
+    const updateWeather = async () => {
+      try {
+        // Call the weather endpoint for New York (hardcoded in backend)
+        const response = await axios.get(`http://localhost:8000/weather/current`, {
+          headers: {
+            Authorization: `Bearer ${user.access_token}`
+          }
+        });
+        
+        // Update weather in localStorage and state
+        const weatherData = response.data;
+        localStorage.setItem("weatherData", JSON.stringify(weatherData));
+        
+        // Update user object with new weather data
+        const updatedUser = { ...user, weather: weatherData };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      } catch (error) {
+        console.error("Failed to update weather:", error);
+      }
+    };
+    
+    // Update every 30 minutes (same as WeatherContext)
+    const weatherInterval = setInterval(updateWeather, 30 * 60 * 1000);
+    
+    return () => clearInterval(weatherInterval);
+  }, [user?.access_token]);
 
   return (
     <AuthContext.Provider value={{ user, isLoading, setUser, login, signup, logout }}>

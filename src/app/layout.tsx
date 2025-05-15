@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/app/context/AuthContext";
 import { WardrobeProvider } from "@/app/context/WardrobeContext";
 import { OutfitProvider } from "@/app/context/OutfitContext";
+import { WeatherProvider } from "@/app/context/WeatherContext";
 
 export const metadata = {
   title: "AI Wardrobe",
@@ -18,12 +19,14 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <WardrobeProvider>
-            <OutfitProvider>
-              <NavBar/>
-              {children}
-            </OutfitProvider>
-          </WardrobeProvider>
+          <WeatherProvider>
+            <WardrobeProvider>
+              <OutfitProvider>
+                <NavBar/>
+                {children}
+              </OutfitProvider>
+            </WardrobeProvider>
+          </WeatherProvider>
         </AuthProvider>
       </body>
     </html>
