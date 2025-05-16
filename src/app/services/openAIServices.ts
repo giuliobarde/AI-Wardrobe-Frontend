@@ -1,6 +1,9 @@
+import { WeatherData } from "../models";
+
 export async function generateChatOutfit(
     accessToken: string,
-    occasion: string
+    occasion: string,
+    weatherData: WeatherData
   ) {
     const response = await fetch("http://localhost:8000/chat/", {
       method: "POST",
@@ -10,7 +13,7 @@ export async function generateChatOutfit(
       },
       body: JSON.stringify({
         user_message: occasion,
-        temp: "20C"
+        weather_data: weatherData
       }),
     });
   

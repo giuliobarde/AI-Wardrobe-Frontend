@@ -2,29 +2,13 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@/app/context/AuthContext";
+import { Outfit } from "../models";
 import { 
   getSavedOutfits, 
   addSavedOutfit, 
   deleteSavedOutfit, 
   favoriteUpdateSavedOutfit 
 } from "../services/outfitServices";
-
-// Define outfit item interface
-export interface OutfitItem {
-  item_id?: string;
-  id?: string;
-  type: string;
-}
-
-// Define outfit interface
-export interface Outfit {
-  id: string;
-  user_id: string;
-  items: OutfitItem[];
-  occasion: string;
-  favorite: boolean;
-  created_at?: string;
-}
 
 // Context interface
 interface OutfitContextType {

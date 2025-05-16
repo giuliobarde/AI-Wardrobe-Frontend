@@ -2,7 +2,8 @@
 
 import React, { createContext, ReactNode, useState, useContext, useEffect } from "react";
 import axios from "axios";
-import { useAuth, WeatherData } from "./AuthContext";
+import { useAuth } from "./AuthContext";
+import { WeatherData } from "../models";
 
 interface WeatherContextType {
   weatherData: WeatherData | null;
@@ -55,12 +56,7 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
       setLoading(false);
     } catch (err) {
       console.error("Weather refresh error:", err);
-      
-      // DEBUG: Log error to console for testing - remove after testing
-      console.log("%c------ WEATHER API TEST ------", "color: #F44336; font-weight: bold; font-size: 14px;");
-      console.log("❌ Error fetching weather data:", err);
-      console.log("%c-----------------------------", "color: #F44336; font-weight: bold; font-size: 14px;");
-      
+     
       setError("Failed to fetch weather data");
       setLoading(false);
     }
@@ -73,23 +69,6 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
     if (storedWeather) {
       const parsedWeather = JSON.parse(storedWeather);
       setWeatherData(parsedWeather);
-      
-      // DEBUG: Log stored weather data to console for testing - remove after testing
-      console.log("%c------ STORED WEATHER DATA ------", "color: #2196F3; font-weight: bold; font-size: 14px;");
-      console.log("📍 Location:", parsedWeather.location);
-      console.log("🌡️ Temperature:", parsedWeather.temperature, "°C");
-      console.log("☁️ Description:", parsedWeather.description);
-      console.log("%c--------------------------------", "color: #2196F3; font-weight: bold; font-size: 14px;");
-    } else if (user?.weather) {
-      setWeatherData(user.weather);
-      localStorage.setItem("weatherData", JSON.stringify(user.weather));
-      
-      // DEBUG: Log user weather data to console for testing - remove after testing
-      console.log("%c------ USER WEATHER DATA ------", "color: #FF9800; font-weight: bold; font-size: 14px;");
-      console.log("📍 Location:", user.weather.location);
-      console.log("🌡️ Temperature:", user.weather.temperature, "°C");
-      console.log("☁️ Description:", user.weather.description);
-      console.log("%c------------------------------", "color: #FF9800; font-weight: bold; font-size: 14px;");
     }
     
     setLoading(false);

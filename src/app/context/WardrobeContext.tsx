@@ -2,29 +2,13 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@/app/context/AuthContext";
+import { WardrobeItem } from "../models";
 import { 
   getAllUserItems, 
   addClothingItem, 
   deleteClothingItem, 
   favoriteUpdateSavedItem 
 } from "../services/wardrobeServices";
-
-// Define item interface
-export interface WardrobeItem {
-  id: string;
-  user_id: string;
-  item_type: string;
-  material: string;
-  color: string;
-  formality: string;
-  pattern: string;
-  fit: string;
-  suitable_for_weather: string;
-  suitable_for_occasion: string;
-  sub_type: string;
-  image_link?: string;
-  favorite: boolean;
-}
 
 // Context interface
 interface WardrobeContextType {

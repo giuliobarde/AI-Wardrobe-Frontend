@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
+import { useWeather } from "@/app/context/WeatherContext";
 import { generateChatOutfit } from "@/app/services/openAIServices";
 import { addSavedOutfit } from "@/app/services/outfitServices";
 import { useOutfit } from "../../context/OutfitContext";
@@ -30,6 +31,7 @@ interface GeneratedOutfit {
 
 const GenerateOutfitTab = () => {
   const { user } = useAuth();
+  const { weatherData } = useWeather();
   const { fetchOutfits } = useOutfit();
 
   const [occasion, setOccasion] = useState("");
@@ -74,10 +76,17 @@ const GenerateOutfitTab = () => {
       return;
     }
 
+    if (!weatherData) {
+      showErrorModal("Weather data is not available. Please try again in a moment.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const { response } = await generateChatOutfit(
         user.access_token,
-        occasion
+        occasion,
+        weatherData
       );
       setGenerated(response);
     } catch (err) {
@@ -128,12 +137,17 @@ const GenerateOutfitTab = () => {
       showErrorModal("Please enter an occasion first.");
       return;
     }
+    if (!weatherData) {
+      showErrorModal("Weather data is not available. Please try again in a moment.");
+      return;
+    }
     setError(null);
     setLoading(true);
     try {
       const { response } = await generateChatOutfit(
         user?.access_token!,
-        occasion
+        occasion,
+        weatherData
       );
       setGenerated(response);
     } catch (err) {

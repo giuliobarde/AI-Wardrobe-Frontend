@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/app/context/AuthContext";
+import { useWeather } from "@/app/context/WeatherContext";
 import {
   User,
   Menu,
@@ -12,13 +13,20 @@ import {
   Home,
   ShoppingBag,
   ShirtIcon,
-  X
+  X,
+  Cloud,
+  CloudRain,
+  CloudSnow,
+  CloudSun,
+  Sun,
+  Wind
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import ErrorModal from "./ErrorModal";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { weatherData } = useWeather();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
@@ -96,6 +104,25 @@ export default function Navbar() {
   // Common styles
   const linkHighlight =
     "absolute -bottom-1 left-0 h-0.5 transition-all duration-300";
+
+  const getWeatherIcon = (description: string) => {
+    const desc = description.toLowerCase();
+    if (desc.includes('rain') || desc.includes('drizzle')) {
+      return <CloudRain className="w-4 h-4 text-blue-400" />;
+    } else if (desc.includes('snow')) {
+      return <CloudSnow className="w-4 h-4 text-blue-300" />;
+    } else if (desc.includes('mist') || desc.includes('fog')) {
+      return <Cloud className="w-4 h-4 text-gray-300" />;
+    } else if (desc.includes('cloud')) {
+      return <Cloud className="w-4 h-4 text-gray-400" />;
+    } else if (desc.includes('partly cloudy') || desc.includes('few clouds')) {
+      return <CloudSun className="w-4 h-4 text-blue-400" />;
+    } else if (desc.includes('wind')) {
+      return <Wind className="w-4 h-4 text-gray-400" />;
+    } else {
+      return <Sun className="w-4 h-4 text-yellow-400" />;
+    }
+  };
 
   return (
     <>
@@ -194,6 +221,17 @@ export default function Navbar() {
 
           {/* Right side: Menu Button or Login */}
           <div className="flex items-center space-x-3">
+            {user?.access_token && weatherData && (
+              <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-gray-800/50 rounded-full hover:bg-gray-800/70 transition-colors">
+                {getWeatherIcon(weatherData.description)}
+                <span className="text-sm font-medium text-gray-200">
+                  {Math.round(weatherData.temperature)}°F
+                </span>
+                <span className="text-xs text-gray-400">
+                  {weatherData.location}
+                </span>
+              </div>
+            )}
             {user?.access_token ? (
               <div className="relative">
                 <button
@@ -235,6 +273,23 @@ export default function Navbar() {
                     ref={menuRef}
                     className="absolute right-0 mt-2 md:w-56 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 origin-top-right transition-all duration-200"
                   >
+                    {/* Weather Section - Mobile Only */}
+                    {user?.access_token && weatherData && (
+                      <div className="md:hidden py-3 border-b border-gray-700">
+                        <div className="flex items-center justify-center space-x-2 px-4">
+                          {getWeatherIcon(weatherData.description)}
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-200">
+                              {Math.round(weatherData.temperature)}°C
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {weatherData.location}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* User Profile Section */}
                     <div className="py-3 border-b border-gray-700 text-center px-4">
                       <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 mb-2 ring-2 ring-gray-700">

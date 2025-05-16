@@ -3,30 +3,7 @@
 import React, { createContext, ReactNode, useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-
-export interface WeatherData {
-  temperature: number;
-  description: string;
-  feels_like: number;
-  humidity: number;
-  wind_speed: number;
-  location: string;
-  timestamp: string;
-}
-
-export interface UserData {
-  email: string;
-  user_id: string;
-  access_token: string;
-  message: string;
-  first_name?: string;
-  last_name?: string;
-  username?: string;
-  member_since?: string;
-  gender?: string;
-  profile_image_url?: string | null;
-  weather?: WeatherData | null;
-}
+import { UserData } from "../models";
 
 export interface AuthContextType {
   user: UserData | null;
@@ -43,7 +20,6 @@ export interface AuthContextType {
   ) => Promise<void>;
   logout: () => void;
 }
-
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
