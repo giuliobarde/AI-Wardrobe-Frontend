@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import ErrorModal from "./ErrorModal";
+import WeatherDisplay from "./WeatherDisplay";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -221,17 +222,7 @@ export default function Navbar() {
 
           {/* Right side: Menu Button or Login */}
           <div className="flex items-center space-x-3">
-            {user?.access_token && weatherData && (
-              <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-gray-800/50 rounded-full hover:bg-gray-800/70 transition-colors">
-                {getWeatherIcon(weatherData.description)}
-                <span className="text-sm font-medium text-gray-200">
-                  {Math.round(weatherData.temperature)}°F
-                </span>
-                <span className="text-xs text-gray-400">
-                  {weatherData.location}
-                </span>
-              </div>
-            )}
+            {user?.access_token && <WeatherDisplay />}
             {user?.access_token ? (
               <div className="relative">
                 <button
