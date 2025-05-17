@@ -1,34 +1,7 @@
-import { Cloud, CloudRain, CloudSnow, CloudSun, Sun, Wind } from "lucide-react";
+import { Cloud, CloudRain, CloudSnow, CloudSun, Sun, Wind, X, Moon, CloudMoon } from "lucide-react";
 import { useWeather } from "@/app/context/WeatherContext";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ForecastDay, HourlyForecast } from "../models";
-
-// Animated weather icons
-const AnimatedRain = () => (
-  <div className="relative w-4 h-4">
-    <CloudRain className="w-4 h-4 text-blue-400" />
-    <div className="absolute inset-0 overflow-hidden">
-      <div className="animate-rain">
-        <div className="raindrop" />
-        <div className="raindrop" style={{ animationDelay: "0.2s" }} />
-        <div className="raindrop" style={{ animationDelay: "0.4s" }} />
-      </div>
-    </div>
-  </div>
-);
-
-const AnimatedSnow = () => (
-  <div className="relative w-4 h-4">
-    <CloudSnow className="w-4 h-4 text-blue-300" />
-    <div className="absolute inset-0 overflow-hidden">
-      <div className="animate-snow">
-        <div className="snowflake" />
-        <div className="snowflake" style={{ animationDelay: "0.2s" }} />
-        <div className="snowflake" style={{ animationDelay: "0.4s" }} />
-      </div>
-    </div>
-  </div>
-);
 
 const AnimatedWind = () => (
   <div className="relative w-4 h-4">
@@ -38,28 +11,76 @@ const AnimatedWind = () => (
 
 export default function WeatherDisplay() {
   const { weatherData, forecastData } = useWeather();
+  const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number>(0);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   console.log("WeatherDisplay - Current weather data:", weatherData);
   console.log("WeatherDisplay - Forecast data:", forecastData);
 
-  const getWeatherIcon = (description: string) => {
+  // Handle hover and click interactions
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      if (!isOpen) {
+        setIsHovered(false);
+      }
+    }, 200);
+  };
+
+  const handleClick = () => {
+    setIsOpen(!isOpen);
+    if (isOpen) {
+      setIsHovered(false);
+    }
+  };
+
+  const getWeatherIcon = (description: string, isDay: boolean = true) => {
     const desc = description.toLowerCase();
     if (desc.includes('rain') || desc.includes('drizzle')) {
-      return <AnimatedRain />;
+      return <CloudRain className="w-4 h-4 text-blue-400" />
     } else if (desc.includes('snow')) {
-      return <AnimatedSnow />;
+      return <CloudSnow className="w-4 h-4 text-blue-300" />
     } else if (desc.includes('mist') || desc.includes('fog')) {
       return <Cloud className="w-4 h-4 text-gray-300" />;
     } else if (desc.includes('cloud')) {
-      return <Cloud className="w-4 h-4 text-gray-400" />;
+      return isDay ? 
+        <Cloud className="w-4 h-4 text-gray-400" /> : 
+        <CloudMoon className="w-4 h-4 text-gray-400" />;
     } else if (desc.includes('partly cloudy') || desc.includes('few clouds')) {
-      return <CloudSun className="w-4 h-4 text-blue-400" />;
+      return isDay ? 
+        <CloudSun className="w-4 h-4 text-blue-400" /> : 
+        <CloudMoon className="w-4 h-4 text-blue-400" />;
     } else if (desc.includes('wind')) {
       return <AnimatedWind />;
     } else {
-      return <Sun className="w-4 h-4 text-yellow-400" />;
+      return isDay ? 
+        <Sun className="w-4 h-4 text-yellow-400" /> : 
+        <Moon className="w-4 h-4 text-blue-300" />;
     }
   };
 
@@ -73,14 +94,17 @@ export default function WeatherDisplay() {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
   };
 
+  const showMenu = isOpen || isHovered;
+
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       <button 
         className="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-gray-800/50 rounded-full hover:bg-gray-800/70 transition-colors"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
-        {getWeatherIcon(weatherData.description)}
+        {getWeatherIcon(weatherData.description, true)}
         <span className="text-sm font-medium text-gray-200">
           {Math.round(weatherData.temperature)}°F
         </span>
@@ -89,24 +113,37 @@ export default function WeatherDisplay() {
         </span>
       </button>
 
-      {/* Tooltip */}
-      {isHovered && (
+      {/* Weather Menu */}
+      {showMenu && (
         <div 
           className="absolute right-0 mt-2 w-96 bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700/50 rounded-xl shadow-2xl p-4 z-50 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-200"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
-          {/* Header */}
-          <div className="flex items-center space-x-3 mb-4 pb-3 border-b border-gray-700/50">
-            <div className="p-2 bg-gray-700/50 rounded-lg">
-              {getWeatherIcon(weatherData.description)}
+          {/* Header with close button */}
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-700/50">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gray-700/50 rounded-lg">
+                {getWeatherIcon(weatherData.description, true)}
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                  {weatherData.description}
+                </h3>
+                <p className="text-sm text-gray-400">{weatherData.location}</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                {weatherData.description}
-              </h3>
-              <p className="text-sm text-gray-400">{weatherData.location}</p>
-            </div>
+            {isOpen && (
+              <button 
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsHovered(false);
+                }}
+                className="p-1 hover:bg-gray-700/50 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            )}
           </div>
           
           {/* Current Weather Details */}
@@ -161,7 +198,7 @@ export default function WeatherDisplay() {
                           {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                         </div>
                         <div className="flex items-center justify-center mb-1">
-                          {getWeatherIcon(day.description)}
+                          {getWeatherIcon(day.description, day.is_day)}
                         </div>
                         <div className="text-sm font-medium text-gray-200 text-center">
                           {Math.round(day.max_temp)}°/{Math.round(day.min_temp)}°
@@ -185,7 +222,7 @@ export default function WeatherDisplay() {
                         {formatHour(hour.time)}
                       </div>
                       <div className="flex items-center justify-center mb-1">
-                        {getWeatherIcon(hour.description)}
+                        {getWeatherIcon(hour.description, hour.is_day)}
                       </div>
                       <div className="text-sm font-medium text-gray-200 text-center">
                         {Math.round(hour.temperature)}°
@@ -203,11 +240,6 @@ export default function WeatherDisplay() {
               <p className="text-sm text-gray-400">No forecast data available</p>
             </div>
           )}
-
-          {/* Footer */}
-          <div className="mt-3 pt-3 border-t border-gray-700/50 text-xs text-gray-400 text-right">
-            Last updated: {new Date(weatherData.timestamp).toLocaleTimeString()}
-          </div>
         </div>
       )}
     </div>
