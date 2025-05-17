@@ -3,10 +3,11 @@
 import React, { createContext, ReactNode, useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
-import { WeatherData } from "../models";
+import { WeatherData, ForecastData } from "../models";
 
 interface WeatherContextType {
   weatherData: WeatherData | null;
+  forecastData: ForecastData | null;
   loading: boolean;
   error: string | null;
   refreshWeather: () => Promise<void>;
@@ -21,6 +22,7 @@ interface WeatherProviderProps {
 export const WeatherProvider = ({ children }: WeatherProviderProps) => {
   const { user } = useAuth();
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [forecastData, setForecastData] = useState<ForecastData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,8 +34,8 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
     setError(null);
     
     try {
-      // Call the weather endpoint for New York (hardcoded in backend)
-      const response = await axios.get(
+      // Fetch current weather
+      const currentResponse = await axios.get(
         `http://localhost:8000/weather/current`,
         {
           headers: {
@@ -42,21 +44,41 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
         }
       );
       
-      const newWeatherData = response.data;      
+      // Fetch forecast
+      console.log("Fetching forecast data...");
+      const forecastResponse = await axios.get(
+        `http://localhost:8000/weather/forecast`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.access_token}`,
+          },
+        }
+      );
+      
+      const newWeatherData = currentResponse.data;
+      const newForecastData = forecastResponse.data;
+      
+      console.log("Received forecast data:", newForecastData);
+      
       // Update context state
       setWeatherData(newWeatherData);
+      setForecastData(newForecastData);
       
       // Update localStorage
       localStorage.setItem("weatherData", JSON.stringify(newWeatherData));
+      localStorage.setItem("forecastData", JSON.stringify(newForecastData));
       
       // Also update the user object to keep them in sync
-      const updatedUser = { ...user, weather: newWeatherData };
+      const updatedUser = { 
+        ...user, 
+        weather: newWeatherData,
+        forecast: newForecastData 
+      };
       localStorage.setItem("user", JSON.stringify(updatedUser));
       
       setLoading(false);
     } catch (err) {
       console.error("Weather refresh error:", err);
-     
       setError("Failed to fetch weather data");
       setLoading(false);
     }
@@ -65,10 +87,16 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
   // Load weather data from localStorage on initial render
   useEffect(() => {
     const storedWeather = localStorage.getItem("weatherData");
+    const storedForecast = localStorage.getItem("forecastData");
     
     if (storedWeather) {
       const parsedWeather = JSON.parse(storedWeather);
       setWeatherData(parsedWeather);
+    }
+    
+    if (storedForecast) {
+      const parsedForecast = JSON.parse(storedForecast);
+      setForecastData(parsedForecast);
     }
     
     setLoading(false);
@@ -94,6 +122,7 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
     <WeatherContext.Provider
       value={{
         weatherData,
+        forecastData,
         loading,
         error,
         refreshWeather,

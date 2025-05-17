@@ -9,6 +9,33 @@ export interface WeatherData {
   timestamp: string;
 }
 
+export interface HourlyForecast {
+  time: string;
+  temperature: number;
+  description: string;
+  feels_like: number;
+  humidity: number;
+  wind_speed: number;
+  chance_of_rain: number;
+  is_day: boolean;
+}
+
+export interface ForecastDay {
+  date: string;
+  max_temp: number;
+  min_temp: number;
+  description: string;
+  chance_of_rain: number;
+  humidity: number;
+  wind_speed: number;
+  hourly_forecast: HourlyForecast[];
+}
+
+export interface ForecastData {
+  location: string;
+  forecast_days: ForecastDay[];
+}
+
 // Auth related models
 export interface UserData {
   email: string;
