@@ -4,6 +4,7 @@ import React, { createContext, ReactNode, useState, useContext, useEffect } from
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 import { WeatherData, ForecastData } from "../models";
+import API_ENDPOINTS from "../config/api";
 
 interface WeatherContextType {
   weatherData: WeatherData | null;
@@ -35,8 +36,8 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
     
     try {
       // Fetch current weather
-      const currentResponse = await axios.get(
-        `http://localhost:8000/weather/current`,
+      const response = await fetch(
+        API_ENDPOINTS.WEATHER.CURRENT,
         {
           headers: {
             Authorization: `Bearer ${user.access_token}`,
@@ -46,8 +47,8 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
       
       // Fetch forecast
       console.log("Fetching forecast data...");
-      const forecastResponse = await axios.get(
-        `http://localhost:8000/weather/forecast`,
+      const forecastResponse = await fetch(
+        API_ENDPOINTS.WEATHER.FORECAST,
         {
           headers: {
             Authorization: `Bearer ${user.access_token}`,
@@ -55,8 +56,8 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
         }
       );
       
-      const newWeatherData = currentResponse.data;
-      const newForecastData = forecastResponse.data;
+      const newWeatherData = await response.json();
+      const newForecastData = await forecastResponse.json();
       
       console.log("Received forecast data:", newForecastData);
       

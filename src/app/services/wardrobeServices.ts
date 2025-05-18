@@ -1,6 +1,7 @@
 import axios from "axios";
+import API_ENDPOINTS from "../config/api";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = API_ENDPOINTS.WARDROBE;
 
 export const addClothingItem = async (item: any, token: string) => {
   try {

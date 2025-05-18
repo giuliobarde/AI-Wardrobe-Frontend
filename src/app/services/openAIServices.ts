@@ -1,11 +1,12 @@
 import { WeatherData } from "../models";
+import API_ENDPOINTS from "../config/api";
 
 export async function generateChatOutfit(
     accessToken: string,
     occasion: string,
     weatherData: WeatherData
   ) {
-    const response = await fetch("http://localhost:8000/chat/", {
+    const response = await fetch(API_ENDPOINTS.CHAT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
