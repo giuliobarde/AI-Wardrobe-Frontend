@@ -7,6 +7,7 @@ export interface WeatherData {
   wind_speed: number;
   location: string;
   timestamp: string;
+  visibility?: string;
 }
 
 export interface HourlyForecast {

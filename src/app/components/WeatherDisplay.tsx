@@ -175,6 +175,25 @@ export default function WeatherDisplay() {
                 {weatherData.wind_speed} mph
               </div>
             </div>
+
+            {/* Additional weather details for overcast conditions */}
+            {weatherData.description.toLowerCase().includes('overcast') && (
+              <>
+                <div className="p-3 bg-gray-800/50 rounded-lg">
+                  <div className="text-xs text-gray-400 mb-1">Cloud Coverage</div>
+                  <div className="text-lg font-medium text-gray-200">
+                    100%
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-gray-800/50 rounded-lg">
+                  <div className="text-xs text-gray-400 mb-1">Visibility</div>
+                  <div className="text-lg font-medium text-gray-200">
+                    {weatherData.visibility || 'Good'}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Forecast Section */}
@@ -198,7 +217,7 @@ export default function WeatherDisplay() {
                           {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                         </div>
                         <div className="flex items-center justify-center mb-1">
-                          {getWeatherIcon(day.description, day.is_day)}
+                          {getWeatherIcon(day.description, true)}
                         </div>
                         <div className="text-sm font-medium text-gray-200 text-center">
                           {Math.round(day.max_temp)}°/{Math.round(day.min_temp)}°
