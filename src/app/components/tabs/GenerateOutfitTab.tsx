@@ -158,6 +158,59 @@ const GenerateOutfitTab = () => {
     }
   };
 
+  const renderWeatherInfo = () => {
+    if (!weatherData) return null;
+
+    const hasForecast = weatherData.forecast && 
+                       typeof weatherData.forecast.high === 'number' && 
+                       typeof weatherData.forecast.low === 'number';
+
+    const tempRange = hasForecast && weatherData.forecast
+      ? `${weatherData.forecast.low}°C - ${weatherData.forecast.high}°C`
+      : `${weatherData.temperature}°C`;
+
+    return (
+      <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+        <h3 className="text-sm font-semibold text-blue-800 mb-2">Current Weather</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-gray-600">Temperature</p>
+            <p className="text-lg font-semibold">{weatherData.temperature}°C</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Feels Like</p>
+            <p className="text-lg font-semibold">{weatherData.feels_like}°C</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Conditions</p>
+            <p className="text-lg font-semibold capitalize">{weatherData.description}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Humidity</p>
+            <p className="text-lg font-semibold">{weatherData.humidity}%</p>
+          </div>
+        </div>
+        {hasForecast && weatherData.forecast && (
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <h3 className="text-sm font-semibold text-blue-800 mb-2">Today's Forecast</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Temperature Range</p>
+                <p className="text-lg font-semibold">{tempRange}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Forecast</p>
+                <p className="text-lg font-semibold capitalize">
+                  {weatherData.forecast.description || weatherData.description}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -169,7 +222,8 @@ const GenerateOutfitTab = () => {
         <h1 className="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           Outfit Recommendations
         </h1>
-        <form onSubmit={handleGenerate} className="space-y-4">
+        {renderWeatherInfo()}
+        <form onSubmit={handleGenerate} className="space-y-4 mt-6">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input

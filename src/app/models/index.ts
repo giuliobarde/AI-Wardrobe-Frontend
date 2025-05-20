@@ -8,6 +8,11 @@ export interface WeatherData {
   location: string;
   timestamp: string;
   visibility?: string;
+  forecast?: {
+    high: number;
+    low: number;
+    description: string;
+  };
 }
 
 export interface HourlyForecast {
