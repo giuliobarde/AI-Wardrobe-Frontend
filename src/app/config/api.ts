@@ -8,7 +8,7 @@ export const API_ENDPOINTS = {
     },
     CHAT: `${API_BASE_URL}/chat`,
     WARDROBE: `${API_BASE_URL}/wardrobe`,
-    OUTFIT: `${API_BASE_URL}/outfit`,
+    OUTFIT: `${API_BASE_URL}`,
     USER: `${API_BASE_URL}/user`,
 } as const;
 
