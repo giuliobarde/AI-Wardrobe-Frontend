@@ -24,6 +24,7 @@ export const addSavedOutfit = async (outfit: any, token: string) => {
 
 export const getSavedOutfits = async (token: string) => {
     try {
+        console.log("Fetching outfits from:", `${API_BASE_URL}/get_saved_outfits/`);
         const response = await axios.get(
           `${API_BASE_URL}/get_saved_outfits/`,
           {
@@ -34,22 +35,44 @@ export const getSavedOutfits = async (token: string) => {
         );
         return response.data.data || [];
     } catch (error: any) {
+        console.log("Error type:", error.name);
+        console.log("Error message:", error.message);
+        console.log("Has response:", !!error.response);
+        console.log("Has request:", !!error.request);
+        console.log("Full error object:", JSON.stringify(error, null, 2));
+        
         if (error.response) {
             // The request was made and the server responded with a status code
             // that falls out of the range of 2xx
-            console.error("Failed to retrieve outfits:", {
-                status: error.response.status,
-                data: error.response.data,
-                headers: error.response.headers
+            console.error("Failed to retrieve outfits - Server Error:", {
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                data: error.response?.data,
+                headers: error.response?.headers,
+                url: `${API_BASE_URL}/get_saved_outfits/`,
+                token: token ? "Token present" : "No token",
+                config: {
+                    url: error.config?.url,
+                    method: error.config?.method,
+                    headers: error.config?.headers
+                }
             });
         } else if (error.request) {
             // The request was made but no response was received
-            console.error("No response received:", error.request);
+            console.error("Failed to retrieve outfits - No Response:", {
+                request: error.request,
+                url: `${API_BASE_URL}/get_saved_outfits/`,
+                token: token ? "Token present" : "No token"
+            });
         } else {
             // Something happened in setting up the request that triggered an Error
-            console.error("Error setting up request:", error.message);
+            console.error("Failed to retrieve outfits - Request Setup Error:", {
+                message: error.message,
+                url: `${API_BASE_URL}/get_saved_outfits/`,
+                token: token ? "Token present" : "No token"
+            });
         }
-        throw error;
+        throw new Error(error.response?.data?.message || error.message || "Failed to retrieve outfits");
     }
 };
 

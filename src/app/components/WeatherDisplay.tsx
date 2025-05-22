@@ -59,7 +59,14 @@ export default function WeatherDisplay() {
     }
   };
 
-  const getWeatherIcon = (description: string, isDay: boolean = true) => {
+  const getWeatherIcon = (description: string | undefined, isDay: boolean = true) => {
+    // Handle undefined or null description
+    if (!description) {
+      return isDay ? 
+        <Sun className="w-4 h-4 text-yellow-400" /> : 
+        <Moon className="w-4 h-4 text-blue-300" />;
+    }
+
     const desc = description.toLowerCase();
     if (desc.includes('rain') || desc.includes('drizzle')) {
       return <CloudRain className="w-4 h-4 text-blue-400" />
@@ -106,10 +113,10 @@ export default function WeatherDisplay() {
       >
         {getWeatherIcon(weatherData.description, true)}
         <span className="text-sm font-medium text-gray-200">
-          {Math.round(weatherData.temperature)}°F
+          {Math.round(weatherData.temperature || 0)}°F
         </span>
         <span className="text-xs text-gray-400">
-          {weatherData.location}
+          {weatherData.location || 'Unknown'}
         </span>
       </button>
 
@@ -128,9 +135,9 @@ export default function WeatherDisplay() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                  {weatherData.description}
+                  {weatherData.description || 'Unknown Weather'}
                 </h3>
-                <p className="text-sm text-gray-400">{weatherData.location}</p>
+                <p className="text-sm text-gray-400">{weatherData.location || 'Unknown Location'}</p>
               </div>
             </div>
             {isOpen && (
@@ -151,33 +158,33 @@ export default function WeatherDisplay() {
             <div className="p-3 bg-gray-800/50 rounded-lg">
               <div className="text-xs text-gray-400 mb-1">Temperature</div>
               <div className="text-lg font-medium text-gray-200">
-                {Math.round(weatherData.temperature)}°F
+                {Math.round(weatherData.temperature || 0)}°F
               </div>
             </div>
             
             <div className="p-3 bg-gray-800/50 rounded-lg">
               <div className="text-xs text-gray-400 mb-1">Feels Like</div>
               <div className="text-lg font-medium text-gray-200">
-                {Math.round(weatherData.feels_like)}°F
+                {Math.round(weatherData.feels_like || 0)}°F
               </div>
             </div>
             
             <div className="p-3 bg-gray-800/50 rounded-lg">
               <div className="text-xs text-gray-400 mb-1">Humidity</div>
               <div className="text-lg font-medium text-gray-200">
-                {weatherData.humidity}%
+                {weatherData.humidity || 0}%
               </div>
             </div>
             
             <div className="p-3 bg-gray-800/50 rounded-lg">
               <div className="text-xs text-gray-400 mb-1">Wind Speed</div>
               <div className="text-lg font-medium text-gray-200">
-                {weatherData.wind_speed} mph
+                {weatherData.wind_speed || 0} mph
               </div>
             </div>
 
             {/* Additional weather details for overcast conditions */}
-            {weatherData.description.toLowerCase().includes('overcast') && (
+            {weatherData.description && weatherData.description.toLowerCase().includes('overcast') && (
               <>
                 <div className="p-3 bg-gray-800/50 rounded-lg">
                   <div className="text-xs text-gray-400 mb-1">Cloud Coverage</div>
@@ -197,7 +204,7 @@ export default function WeatherDisplay() {
           </div>
 
           {/* Forecast Section */}
-          {forecastData ? (
+          {forecastData && forecastData.forecast_days ? (
             <>
               {/* Daily Forecast */}
               <div className="mt-4 pt-4 border-t border-gray-700/50">
@@ -220,10 +227,10 @@ export default function WeatherDisplay() {
                           {getWeatherIcon(day.description, true)}
                         </div>
                         <div className="text-sm font-medium text-gray-200 text-center">
-                          {Math.round(day.max_temp)}°/{Math.round(day.min_temp)}°
+                          {Math.round(day.max_temp || 0)}°/{Math.round(day.min_temp || 0)}°
                         </div>
                         <div className="text-xs text-gray-400 text-center">
-                          {day.chance_of_rain}% rain
+                          {day.chance_of_rain || 0}% rain
                         </div>
                       </div>
                     );
@@ -232,27 +239,29 @@ export default function WeatherDisplay() {
               </div>
 
               {/* Hourly Forecast */}
-              <div className="mt-4 pt-4 border-t border-gray-700/50">
-                <h4 className="text-sm font-medium text-gray-300 mb-3">Hourly Forecast</h4>
-                <div className="flex space-x-2 overflow-x-auto pb-2">
-                  {forecastData.forecast_days[selectedDay].hourly_forecast.map((hour: HourlyForecast, index: number) => (
-                    <div key={index} className="flex-shrink-0 w-16 p-2 bg-gray-800/50 rounded-lg">
-                      <div className="text-xs text-gray-400 mb-1">
-                        {formatHour(hour.time)}
+              {forecastData.forecast_days[selectedDay] && forecastData.forecast_days[selectedDay].hourly_forecast && (
+                <div className="mt-4 pt-4 border-t border-gray-700/50">
+                  <h4 className="text-sm font-medium text-gray-300 mb-3">Hourly Forecast</h4>
+                  <div className="flex space-x-2 overflow-x-auto pb-2">
+                    {forecastData.forecast_days[selectedDay].hourly_forecast.map((hour: HourlyForecast, index: number) => (
+                      <div key={index} className="flex-shrink-0 w-16 p-2 bg-gray-800/50 rounded-lg">
+                        <div className="text-xs text-gray-400 mb-1">
+                          {formatHour(hour.time)}
+                        </div>
+                        <div className="flex items-center justify-center mb-1">
+                          {getWeatherIcon(hour.description, hour.is_day)}
+                        </div>
+                        <div className="text-sm font-medium text-gray-200 text-center">
+                          {Math.round(hour.temperature || 0)}°
+                        </div>
+                        <div className="text-xs text-gray-400 text-center">
+                          {hour.chance_of_rain || 0}%
+                        </div>
                       </div>
-                      <div className="flex items-center justify-center mb-1">
-                        {getWeatherIcon(hour.description, hour.is_day)}
-                      </div>
-                      <div className="text-sm font-medium text-gray-200 text-center">
-                        {Math.round(hour.temperature)}°
-                      </div>
-                      <div className="text-xs text-gray-400 text-center">
-                        {hour.chance_of_rain}%
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           ) : (
             <div className="mt-4 pt-4 border-t border-gray-700/50">
@@ -263,4 +272,4 @@ export default function WeatherDisplay() {
       )}
     </div>
   );
-} 
+}
