@@ -166,8 +166,8 @@ const GenerateOutfitTab = () => {
                        typeof weatherData.forecast.low === 'number';
 
     const tempRange = hasForecast && weatherData.forecast
-      ? `${weatherData.forecast.low}°C - ${weatherData.forecast.high}°C`
-      : `${weatherData.temperature}°C`;
+      ? `${weatherData.forecast.low}°F - ${weatherData.forecast.high}°F`
+      : `${weatherData.temperature}°F`;
 
     return (
       <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
@@ -175,11 +175,11 @@ const GenerateOutfitTab = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-600">Temperature</p>
-            <p className="text-lg font-semibold">{weatherData.temperature}°C</p>
+            <p className="text-lg font-semibold">{weatherData.temperature}°F</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Feels Like</p>
-            <p className="text-lg font-semibold">{weatherData.feels_like}°C</p>
+            <p className="text-lg font-semibold">{weatherData.feels_like}°F</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Conditions</p>

@@ -11,7 +11,9 @@ interface WeatherContextType {
   forecastData: ForecastData | null;
   loading: boolean;
   error: string | null;
+  location: { lat: number; lon: number } | null;
   refreshWeather: () => Promise<void>;
+  updateLocation: (lat: number, lon: number) => void;
 }
 
 const WeatherContext = createContext<WeatherContextType | undefined>(undefined);
@@ -26,10 +28,36 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
   const [forecastData, setForecastData] = useState<ForecastData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
+
+  // Function to get user's current location
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setError("Failed to get your location. Please enable location services.");
+        }
+      );
+    } else {
+      setError("Geolocation is not supported by your browser");
+    }
+  };
+
+  // Function to update location manually
+  const updateLocation = (lat: number, lon: number) => {
+    setLocation({ lat, lon });
+  };
 
   // Function to refresh weather data
   const refreshWeather = async () => {
-    if (!user) return;
+    if (!user || !location) return;
     
     setLoading(true);
     setError(null);
@@ -37,7 +65,7 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
     try {
       // Fetch current weather
       const response = await fetch(
-        API_ENDPOINTS.WEATHER.CURRENT,
+        `${API_ENDPOINTS.WEATHER.CURRENT}?lat=${location.lat}&lon=${location.lon}`,
         {
           headers: {
             Authorization: `Bearer ${user.access_token}`,
@@ -48,7 +76,7 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
       // Fetch forecast
       console.log("Fetching forecast data...");
       const forecastResponse = await fetch(
-        API_ENDPOINTS.WEATHER.FORECAST,
+        `${API_ENDPOINTS.WEATHER.FORECAST}?lat=${location.lat}&lon=${location.lon}`,
         {
           headers: {
             Authorization: `Bearer ${user.access_token}`,
@@ -85,6 +113,11 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
     }
   };
 
+  // Get user's location on initial render
+  useEffect(() => {
+    getUserLocation();
+  }, []);
+
   // Load weather data from localStorage on initial render
   useEffect(() => {
     const storedWeather = localStorage.getItem("weatherData");
@@ -103,6 +136,13 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
     setLoading(false);
   }, []);
 
+  // Refresh weather data when location changes
+  useEffect(() => {
+    if (location) {
+      refreshWeather();
+    }
+  }, [location]);
+
   // Refresh weather data when the user changes (e.g., on login)
   useEffect(() => {
     if (user) {
@@ -112,12 +152,12 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
 
   // Refresh weather data periodically (every 30 minutes)
   useEffect(() => {
-    if (!user) return;
+    if (!user || !location) return;
     
     const interval = setInterval(refreshWeather, 30 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, location]);
 
   return (
     <WeatherContext.Provider
@@ -126,7 +166,9 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
         forecastData,
         loading,
         error,
+        location,
         refreshWeather,
+        updateLocation,
       }}
     >
       {children}
