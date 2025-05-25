@@ -88,6 +88,7 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
       const newForecastData = await forecastResponse.json();
       
       console.log("Received forecast data:", newForecastData);
+      console.log(`Weather data updated at: ${new Date().toLocaleTimeString()}`);
       
       // Update context state
       setWeatherData(newWeatherData);
@@ -150,11 +151,11 @@ export const WeatherProvider = ({ children }: WeatherProviderProps) => {
     }
   }, [user?.user_id]);
 
-  // Refresh weather data periodically (every 30 minutes)
+  // Refresh weather data periodically (every 5 minutes)
   useEffect(() => {
     if (!user || !location) return;
     
-    const interval = setInterval(refreshWeather, 30 * 60 * 1000);
+    const interval = setInterval(refreshWeather, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [user, location]);
