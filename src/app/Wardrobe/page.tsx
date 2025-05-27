@@ -28,7 +28,7 @@ function WardrobePage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isLoading && !user?.access_token) {
+    if (!isLoading && !user) {
       router.push("/");
     }
   }, [user, isLoading, router]);

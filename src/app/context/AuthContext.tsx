@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, ReactNode, useState, useContext, useEffect } from "react";
+import React, { createContext, ReactNode, useState, useContext, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { UserData } from "../models";
@@ -19,6 +19,7 @@ export interface AuthContextType {
     gender: string
   ) => Promise<void>;
   logout: () => void;
+  refreshUserData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,6 +32,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+
+  // Function to set the auth token in axios headers
+  const setAuthToken = useCallback((token: string | null) => {
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common["Authorization"];
+    }
+  }, []);
+
+  const fetchUserData = async (token: string): Promise<UserData> => {
+    const response = await axios.get("http://localhost:8000/profiles", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  };
+
+  const refreshUserData = async () => {
+    if (user?.access_token) {
+      try {
+        const userData = await fetchUserData(user.access_token);
+        setUser(userData);
+      } catch (error) {
+        console.error("Failed to refresh user data:", error);
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          logout();
+        }
+      }
+    }
+  };
 
   const login = async (email: string, password: string) => {
     try {
@@ -45,42 +76,37 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
       );
 
+      const { access_token, user_id, first_name, last_name, username, member_since, gender, profile_image_url } = response.data;
+      
+      // Set the token in axios headers
+      setAuthToken(access_token);
+      
+      // Create user data object from the sign-in response
       const userData: UserData = {
         email,
-        user_id: response.data.user_id,
-        access_token: response.data.access_token,
-        message: response.data.message,
-        first_name: response.data.first_name,
-        last_name: response.data.last_name,
-        username: response.data.username,
-        member_since: response.data.member_since,
-        gender: response.data.gender,
-        profile_image_url: response.data.profile_image_url,
-        weather: response.data.weather
+        user_id,
+        access_token,
+        first_name,
+        last_name,
+        username,
+        member_since,
+        gender,
+        profile_image_url,
+        weather: null,
+        message: "Login successful"
       };
-
-      // Store weather data in a separate localStorage item for easy access
-      if (userData.weather) {
-        localStorage.setItem("weatherData", JSON.stringify(userData.weather));
-      }
-
-      axios.defaults.headers.common["Authorization"] = `Bearer ${userData.access_token}`;
-      localStorage.setItem("token", userData.access_token);
-      localStorage.setItem("user", JSON.stringify(userData));
-      console.log("Access token:", userData.access_token);
+      
       setUser(userData);
       router.push("/Wardrobe");
     } catch (error: any) {
       console.error("Login failed:", error.response ? error.response.data : error.message);
       
-      // Create an error object with Firebase-like error codes for compatibility
       const customError: any = new Error(
         error.response?.data?.detail || 
         error.response?.data?.message || 
         "Authentication failed"
       );
       
-      // Map backend errors to Firebase-like error codes that LoginModal expects
       if (error.response?.status === 401 || error.response?.status === 403) {
         customError.code = "auth/wrong-password";
       } else if (error.response?.status === 404) {
@@ -93,7 +119,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         customError.code = "auth/unknown";
       }
       
-      // This is crucial: throw the error so it can be caught by the component
       throw customError;
     }
   };
@@ -107,7 +132,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     gender: string
   ) => {
     try {
-      const response = await axios.post("http://localhost:8000/sign-up/", {
+      await axios.post("http://localhost:8000/sign-up/", {
         email,
         password,
         first_name: firstName,
@@ -115,7 +140,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         username,
         gender,
       });
-      // Optionally, automatically log in the user after sign-up.
       await login(email, password);
     } catch (error: any) {
       console.error(
@@ -128,18 +152,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = () => {
     setUser(null);
-    delete axios.defaults.headers.common["Authorization"];
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    setAuthToken(null);
     router.push("/");
   };
 
-  // Inactivity timer using the Page Visibility API.
+  // Inactivity timer using the Page Visibility API
   useEffect(() => {
-    if (!user) return; // Only activate when user is logged in.
+    if (!user) return;
 
     let timeoutId: ReturnType<typeof setTimeout>;
-    const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes in milliseconds
+    const SESSION_TIMEOUT = 0.5 * 60 * 1000; // 30 minutes in milliseconds
 
     const handleSessionTimeout = () => {
       logout();
@@ -153,26 +175,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        // Store the time when the page goes hidden.
-        localStorage.setItem("lastActive", Date.now().toString());
         clearTimeout(timeoutId);
       } else if (document.visibilityState === "visible") {
-        // When the page is visible, check how long it was hidden.
-        const lastActive = localStorage.getItem("lastActive");
-        if (lastActive) {
-          const elapsed = Date.now() - parseInt(lastActive);
-          if (elapsed > SESSION_TIMEOUT) {
-            // If hidden longer than SESSION_TIMEOUT, log out.
-            handleSessionTimeout();
-            return;
-          }
-        }
         resetTimer();
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    // Initialize the timer.
     resetTimer();
 
     return () => {
@@ -181,63 +190,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, [user, router]);
 
-  // Auto-login: restore session if available.
+  // Auto-login: restore session if available
   useEffect(() => {
-    if (!user) {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        const parsedUser: UserData = JSON.parse(storedUser);
-        setUser(parsedUser);
-        axios.defaults.headers.common["Authorization"] = `Bearer ${parsedUser.access_token}`;
+    const initializeAuth = async () => {
+      // Check if we have a session cookie
+      try {
+        const response = await axios.get("http://localhost:8000/auth/session");
+        if (response.data.token) {
+          setAuthToken(response.data.token);
+          const userData = await fetchUserData(response.data.token);
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error("Failed to restore session:", error);
       }
-    }
-    setIsLoading(false);
-  }, [user]);
+      setIsLoading(false);
+    };
 
-  // Only redirect if not loading and no user.
+    initializeAuth();
+  }, []);
+
+  // Only redirect if not loading and no user
   useEffect(() => {
     if (!isLoading && !user?.access_token) {
       router.push("/");
     }
   }, [user, router, isLoading]);
 
-  // Update weather data periodically
-  useEffect(() => {
-    if (!user) return;
-    
-    // Weather updates are now handled by WeatherContext
-    // This code is kept as a fallback but can be removed once WeatherContext is fully tested
-    
-    const updateWeather = async () => {
-      try {
-        // Call the weather endpoint for New York (hardcoded in backend)
-        const response = await axios.get(`http://localhost:8000/weather/current`, {
-          headers: {
-            Authorization: `Bearer ${user.access_token}`
-          }
-        });
-        
-        // Update weather in localStorage and state
-        const weatherData = response.data;
-        localStorage.setItem("weatherData", JSON.stringify(weatherData));
-        
-        // Update user object with new weather data
-        const updatedUser = { ...user, weather: weatherData };
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-      } catch (error) {
-        console.error("Failed to update weather:", error);
-      }
-    };
-    
-    // Update every 30 minutes (same as WeatherContext)
-    const weatherInterval = setInterval(updateWeather, 30 * 60 * 1000);
-    
-    return () => clearInterval(weatherInterval);
-  }, [user?.access_token]);
-
   return (
-    <AuthContext.Provider value={{ user, isLoading, setUser, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, setUser, login, signup, logout, refreshUserData }}>
       {children}
     </AuthContext.Provider>
   );

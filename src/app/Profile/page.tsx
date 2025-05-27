@@ -57,14 +57,14 @@ export default function Profile() {
 
   // Redirect to home if not signed in
   useEffect(() => {
-    if (!isLoading && !user?.access_token) {
+    if (!isLoading && !user) {
       router.push("/");
     }
   }, [isLoading, user, router]);
 
   // Load all items
   const loadItems = useCallback(async () => {
-    if (!user?.access_token) return;
+    if (!user) return;
     setLoadingItems(true);
     setItemsError("");
     setIsItemsErrorModalOpen(false);
@@ -91,7 +91,7 @@ export default function Profile() {
 
   // Load all outfits
   const loadOutfits = useCallback(async () => {
-    if (!user?.access_token) return;
+    if (!user) return;
     setLoadingOutfits(true);
     setOutfitsError("");
     setIsOutfitsErrorModalOpen(false);

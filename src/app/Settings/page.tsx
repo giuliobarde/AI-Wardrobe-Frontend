@@ -30,7 +30,7 @@ export default function Settings() {
 
   // Redirect if user is not signed in and auth is not loading
   useEffect(() => {
-    if (!isLoading && !user?.access_token) {
+    if (!isLoading && !user) {
       router.push("/");
     }
   }, [user, router, isLoading]);
