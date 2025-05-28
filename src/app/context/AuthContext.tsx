@@ -5,6 +5,22 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { UserData } from "../models";
 
+// Configure axios defaults
+axios.defaults.timeout = 10000; // 10 seconds timeout
+axios.defaults.baseURL = "http://localhost:8000";
+
+// Add response interceptor for better error handling
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timeout:', error);
+      return Promise.reject(new Error('Request timed out. Please try again.'));
+    }
+    return Promise.reject(error);
+  }
+);
+
 export interface AuthContextType {
   user: UserData | null;
   isLoading: boolean;
@@ -43,7 +59,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const fetchUserData = async (token: string): Promise<UserData> => {
-    const response = await axios.get("http://localhost:8000/profiles", {
+    const response = await axios.get("/profiles", {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
@@ -66,7 +82,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string) => {
     try {
       const response = await axios.post(
-        "http://localhost:8000/sign-in/",
+        "/sign-in/",
         {
           identifier: email,
           password,
@@ -80,6 +96,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       // Set the token in axios headers
       setAuthToken(access_token);
+      
+      // Store token in localStorage
+      localStorage.setItem('access_token', access_token);
       
       // Create user data object from the sign-in response
       const userData: UserData = {
@@ -132,7 +151,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     gender: string
   ) => {
     try {
-      await axios.post("http://localhost:8000/sign-up/", {
+      await axios.post("/sign-up/", {
         email,
         password,
         first_name: firstName,
@@ -153,6 +172,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = () => {
     setUser(null);
     setAuthToken(null);
+    localStorage.removeItem('access_token');
     router.push("/");
   };
 
@@ -161,7 +181,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (!user) return;
 
     let timeoutId: ReturnType<typeof setTimeout>;
-    const SESSION_TIMEOUT = 0.5 * 60 * 1000; // 30 minutes in milliseconds
+    const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes in milliseconds
 
     const handleSessionTimeout = () => {
       logout();
@@ -193,16 +213,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Auto-login: restore session if available
   useEffect(() => {
     const initializeAuth = async () => {
-      // Check if we have a session cookie
-      try {
-        const response = await axios.get("http://localhost:8000/auth/session");
-        if (response.data.token) {
-          setAuthToken(response.data.token);
-          const userData = await fetchUserData(response.data.token);
+      // Check if we have a token in localStorage
+      const storedToken = localStorage.getItem('access_token');
+      if (storedToken) {
+        try {
+          setAuthToken(storedToken);
+          const userData = await fetchUserData(storedToken);
           setUser(userData);
+        } catch (error) {
+          console.error("Failed to restore session:", error);
+          localStorage.removeItem('access_token');
         }
-      } catch (error) {
-        console.error("Failed to restore session:", error);
       }
       setIsLoading(false);
     };
