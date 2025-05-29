@@ -4,6 +4,7 @@ import React, { createContext, ReactNode, useState, useContext, useEffect, useCa
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { UserData } from "../models";
+import ErrorModal from "../components/ErrorModal";
 
 // Configure axios defaults
 axios.defaults.timeout = 10000; // 10 seconds timeout
@@ -47,6 +48,7 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
   const router = useRouter();
 
   // Function to set the auth token in axios headers
@@ -184,8 +186,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes in milliseconds
 
     const handleSessionTimeout = () => {
-      logout();
-      router.push("/?sessionExpired=true");
+      setShowSessionExpiredModal(true);
     };
 
     const resetTimer = () => {
@@ -209,6 +210,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [user, router]);
+
+  const handleSessionExpiredModalClose = () => {
+    setShowSessionExpiredModal(false);
+    logout();
+    router.push("/?sessionExpired=true");
+  };
 
   // Auto-login: restore session if available
   useEffect(() => {
@@ -241,6 +248,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   return (
     <AuthContext.Provider value={{ user, isLoading, setUser, login, signup, logout, refreshUserData }}>
       {children}
+      <ErrorModal
+        isOpen={showSessionExpiredModal}
+        title="Session Expired"
+        message="Your session has expired due to inactivity. Please log in again to continue."
+        onClose={handleSessionExpiredModalClose}
+      />
     </AuthContext.Provider>
   );
 };
