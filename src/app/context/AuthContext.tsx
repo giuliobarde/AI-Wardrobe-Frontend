@@ -61,10 +61,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const fetchUserData = async (token: string): Promise<UserData> => {
-    const response = await axios.get("/profiles", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
+    try {
+      const response = await axios.get("/profile/", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Add the access token to the user data
+      return {
+        ...response.data,
+        access_token: token
+      };
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      throw error;
+    }
   };
 
   const refreshUserData = async () => {
@@ -230,6 +239,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } catch (error) {
           console.error("Failed to restore session:", error);
           localStorage.removeItem('access_token');
+          setUser(null);
+          setAuthToken(null);
         }
       }
       setIsLoading(false);
@@ -240,7 +251,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Only redirect if not loading and no user
   useEffect(() => {
-    if (!isLoading && !user?.access_token) {
+    if (!isLoading && !user) {
       router.push("/");
     }
   }, [user, router, isLoading]);
