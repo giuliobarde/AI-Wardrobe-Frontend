@@ -40,6 +40,7 @@ export default function Profile() {
   const [allItems, setAllItems] = useState<ClothingItem[]>([]);
   const [recentItems, setRecentItems] = useState<ClothingItem[]>([]);
   const [favoriteItems, setFavoriteItems] = useState<ClothingItem[]>([]);
+  const [styleMatch, setStyleMatch] = useState(85);
   const [loadingItems, setLoadingItems] = useState(false);
   const [itemsError, setItemsError] = useState("");
   const [isItemsErrorModalOpen, setIsItemsErrorModalOpen] = useState(false);
@@ -54,6 +55,38 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<"recent" | "favorites">("recent");
   const [refreshOutfits, setRefreshOutfits] = useState(0);
   const [imageError, setImageError] = useState(false);
+  const [animatedStats, setAnimatedStats] = useState({
+    items: 0,
+    outfits: 0,
+    favorites: 0,
+    styleMatch: 0
+  });
+
+  // Animation effect for stats
+  useEffect(() => {
+    const duration = 2000; // 2 seconds
+    const steps = 60; // 60
+    const interval = duration / steps;
+    
+    let currentStep = 0;
+    const timer = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / steps;
+      
+      setAnimatedStats({
+        items: Math.floor(allItems.length * progress),
+        outfits: Math.floor(allOutfits.length * progress),
+        favorites: Math.floor(favoriteItems.length * progress),
+        styleMatch: Math.floor(styleMatch * progress)
+      });
+
+      if (currentStep >= steps) {
+        clearInterval(timer);
+      }
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [allItems.length, allOutfits.length, favoriteItems.length]);
 
   // Redirect to home if not signed in
   useEffect(() => {
@@ -199,22 +232,22 @@ export default function Profile() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 text-center">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-3xl font-bold text-blue-600">
-                  {allItems.length}
+                  {animatedStats.items}
                 </p>
                 <p className="text-gray-600">Items</p>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg">
                 <p className="text-3xl font-bold text-purple-600">
-                  {allOutfits.length}
+                  {animatedStats.outfits}
                 </p>
                 <p className="text-gray-600">Outfits</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-3xl font-bold text-green-600">{favoriteItems.length}</p>
+                <p className="text-3xl font-bold text-green-600">{animatedStats.favorites}</p>
                 <p className="text-gray-600">Favorites</p>
               </div>
               <div className="bg-amber-50 p-4 rounded-lg">
-                <p className="text-3xl font-bold text-amber-600">85%</p>
+                <p className="text-3xl font-bold text-amber-600">{animatedStats.styleMatch}%</p>
                 <p className="text-gray-600">Style Match</p>
               </div>
             </div>
