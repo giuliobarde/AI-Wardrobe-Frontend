@@ -192,10 +192,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (!user) return;
 
     let timeoutId: ReturnType<typeof setTimeout>;
-    const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes in milliseconds
+    const SESSION_TIMEOUT = 0.5 * 60 * 1000; // 20 minutes in milliseconds
 
     const handleSessionTimeout = () => {
       setShowSessionExpiredModal(true);
+      logout();
     };
 
     const resetTimer = () => {
@@ -206,17 +207,46 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         clearTimeout(timeoutId);
+        timeoutId = setTimeout(handleSessionTimeout, SESSION_TIMEOUT);
       } else if (document.visibilityState === "visible") {
-        resetTimer();
+        const lastActivity = localStorage.getItem('lastActivity');
+        if (lastActivity) {
+          const timeSinceLastActivity = Date.now() - parseInt(lastActivity);
+          if (timeSinceLastActivity >= SESSION_TIMEOUT) {
+            handleSessionTimeout();
+          } else {
+            resetTimer();
+          }
+        } else {
+          resetTimer();
+        }
       }
     };
 
+    // Update last activity timestamp on user interactions
+    const updateLastActivity = () => {
+      localStorage.setItem('lastActivity', Date.now().toString());
+      resetTimer();
+    };
+
+    // Add event listeners for user activity
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("mousemove", updateLastActivity);
+    document.addEventListener("keydown", updateLastActivity);
+    document.addEventListener("click", updateLastActivity);
+    document.addEventListener("scroll", updateLastActivity);
+
+    // Initialize last activity timestamp
+    localStorage.setItem('lastActivity', Date.now().toString());
     resetTimer();
 
     return () => {
       clearTimeout(timeoutId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("mousemove", updateLastActivity);
+      document.removeEventListener("keydown", updateLastActivity);
+      document.removeEventListener("click", updateLastActivity);
+      document.removeEventListener("scroll", updateLastActivity);
     };
   }, [user, router]);
 
