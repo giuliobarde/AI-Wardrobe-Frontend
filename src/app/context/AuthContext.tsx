@@ -192,7 +192,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (!user) return;
 
     let timeoutId: ReturnType<typeof setTimeout>;
-    const SESSION_TIMEOUT = 0.5 * 60 * 1000; // 20 minutes in milliseconds
+    const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes in milliseconds
 
     const handleSessionTimeout = () => {
       setShowSessionExpiredModal(true);
