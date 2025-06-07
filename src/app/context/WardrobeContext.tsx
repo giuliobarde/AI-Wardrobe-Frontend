@@ -162,6 +162,10 @@ export function WardrobeProvider({ children }: { children: ReactNode }) {
       
       // Update local state with the new item
       setItems(prevItems => [...prevItems, newItem]);
+      setLastFetched(Date.now());
+      
+      // Clear the cache to force a fresh fetch
+      localStorage.removeItem(STORAGE_KEY);
       
       // Notify outfit components about the change
       onItemsChanged();

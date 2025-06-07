@@ -256,11 +256,16 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
     try {
       setIsSubmitting(true);
       // Use addItem from WardrobeContext instead of direct API call
-      await addItem(payload);
-      closeModal();
-      onItemAdded();
+      const newItem = await addItem(payload);
+      if (newItem) {
+        closeModal();
+        onItemAdded();
+      } else {
+        handleError("Failed to add item. Please try again.");
+      }
     } catch (error: any) {
-      handleError("Failed to add item. Please try again.");
+      console.error("Add item error:", error);
+      handleError(error.message || "Failed to add item. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
