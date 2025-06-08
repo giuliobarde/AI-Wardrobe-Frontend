@@ -15,8 +15,18 @@ interface LoginModalProps {
 const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setShowSignup }) => {
   if (!modalOpen) return null;
 
-  const [email, setEmail] = useState("soccerstar17@gmail.com");
-  const [password, setPassword] = useState("megmeg");
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('lastEmail') || ''; // soccerstar17@gmail.com
+    }
+    return '';
+  });
+  const [password, setPassword] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('lastPassword') || ''; // megmeg
+    }
+    return '';
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -33,6 +43,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ modalOpen, setModalOpen, setSho
     
     try {
       await login(email, password);
+      // Save credentials to localStorage after successful login
+      localStorage.setItem('lastEmail', email);
+      localStorage.setItem('lastPassword', password);
       setModalOpen(false);
       // Note: We don't need to explicitly redirect here as AuthContext will handle it
     } catch (err: any) {

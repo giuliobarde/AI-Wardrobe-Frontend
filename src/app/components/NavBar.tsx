@@ -19,16 +19,21 @@ import {
   CloudSnow,
   CloudSun,
   Sun,
-  Wind
+  Wind,
+  ChevronDown
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import ErrorModal from "./ErrorModal";
 import WeatherDisplay from "./WeatherDisplay";
+import LoginModal from "./LoginModal";
+import SignUpModal from "./SignUpModal";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { weatherData } = useWeather();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -128,7 +133,7 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 w-full z-50 transition-shadow duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out ${
           scrolled
             ? "bg-gray-900 bg-opacity-95 shadow-lg"
             : "bg-gradient-to-r from-gray-900 to-gray-800 bg-opacity-75 backdrop-blur-md"
@@ -256,6 +261,7 @@ export default function Navbar() {
                       </div>
                     )}
                   </div>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* Combined Menu - Desktop Dropdown & Mobile Menu */}
@@ -377,16 +383,26 @@ export default function Navbar() {
               </div>
             ) : (
               pathname === "/" && (
-                <Link
-                  href="/Login"
-                  className="relative overflow-hidden px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg group"
-                >
-                  <span className="relative z-10 font-medium group-hover:text-white">
-                    Login
-                  </span>
-                  <span className="absolute top-0 left-0 w-full h-full bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-                  <span className="absolute bottom-0 left-0 w-0 h-1 bg-white group-hover:w-full transition-all duration-300" />
-                </Link>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setShowLogin(true)}
+                    className="relative overflow-hidden px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg group"
+                  >
+                    <span className="relative z-10 font-medium group-hover:text-white">
+                      Login
+                    </span>
+                    <span className="absolute top-0 left-0 w-full h-full bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                    <span className="absolute bottom-0 left-0 w-0 h-1 bg-white group-hover:w-full transition-all duration-300" />
+                  </button>
+                  <button
+                    onClick={() => setShowSignup(true)}
+                    className="relative overflow-hidden px-6 py-2.5 border border-blue-500 text-blue-500 rounded-lg group hover:bg-blue-500/10"
+                  >
+                    <span className="relative z-10 font-medium">
+                      Sign Up
+                    </span>
+                  </button>
+                </div>
               )
             )}
           </div>
@@ -400,6 +416,24 @@ export default function Navbar() {
         message={errorModal.message}
         onClose={closeErrorModal}
       />
+
+      {/* Login Modal */}
+      {showLogin && (
+        <LoginModal
+          modalOpen={showLogin}
+          setModalOpen={setShowLogin}
+          setShowSignup={setShowSignup}
+        />
+      )}
+
+      {/* Sign Up Modal */}
+      {showSignup && (
+        <SignUpModal
+          modalOpen={showSignup}
+          setModalOpen={setShowSignup}
+          setShowLogin={setShowLogin}
+        />
+      )}
     </>
   );
 }
