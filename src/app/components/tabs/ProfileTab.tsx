@@ -20,11 +20,21 @@ export default function ProfileTab({ user, setUser }: ProfileTabProps) {
   const [updateError, setUpdateError] = useState("");
   const [updating, setUpdating] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Error modal state
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Cleanup URL objects when component unmounts or when preview changes
+  useEffect(() => {
+    return () => {
+      if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(profileImagePreview);
+      }
+    };
+  }, [profileImagePreview]);
 
   // Update form fields when user data changes
   useEffect(() => {
@@ -78,6 +88,10 @@ export default function ProfileTab({ user, setUser }: ProfileTabProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Cleanup previous blob URL if it exists
+      if (profileImagePreview && profileImagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(profileImagePreview);
+      }
       setProfileImage(file);
       const imageUrl = URL.createObjectURL(file);
       setProfileImagePreview(imageUrl);
@@ -177,10 +191,22 @@ export default function ProfileTab({ user, setUser }: ProfileTabProps) {
           <div className="relative">
             {profileImagePreview ? (
               <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300">
+                {imageLoading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-white"></div>
+                  </div>
+                )}
                 <img 
                   src={profileImagePreview} 
                   alt="Profile" 
                   className="w-full h-full object-cover"
+                  onLoadStart={() => setImageLoading(true)}
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => {
+                    setImageLoading(false);
+                    setErrorMessage("Failed to load profile image");
+                    setIsErrorModalOpen(true);
+                  }}
                 />
               </div>
             ) : (

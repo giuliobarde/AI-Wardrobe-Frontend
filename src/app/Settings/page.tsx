@@ -70,7 +70,11 @@ export default function Settings() {
   return (
     <div className="min-h-screen pt-20 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
       {updateError && (
-        <ErrorModal error={updateError} onClose={() => setUpdateError("")} />
+        <ErrorModal 
+          isOpen={!!updateError}
+          message={updateError}
+          onClose={() => setUpdateError("")}
+        />
       )}
 
       <div className="max-w-6xl mx-auto px-4">

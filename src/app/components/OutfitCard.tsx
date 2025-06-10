@@ -4,7 +4,8 @@ import React, { useEffect, useRef, useState, useId } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Star, Trash2, Calendar, Clock } from "lucide-react";
 import { useOutsideClick } from "../hooks/use-outside-click";
-import { useOutfit, Outfit, OutfitItem } from "../context/OutfitContext";
+import { useOutfit } from "../context/OutfitContext";
+import { Outfit, OutfitItem } from "../models";
 import ItemCard from "./ItemCard";
 import ErrorModal from "./ErrorModal";
 
@@ -78,7 +79,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
       
       // No need to update state here as that's handled by the context
       if (activeOutfit && activeOutfit.id === outfitId) {
-        setActiveOutfit(prev => prev ? { ...prev, favorite: !prev.favorite } : null);
+        setActiveOutfit((prev: Outfit | null) => prev ? { ...prev, favorite: !prev.favorite } : null);
       }
     } catch (err) {
       console.error("Failed to toggle favorite:", err);
@@ -210,7 +211,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
               </p>
 
               <div className="grid grid-cols-4 gap-2">
-                {outfit.items.slice(0, 4).map((item, index) => {
+                {outfit.items.slice(0, 4).map((item: OutfitItem, index: number) => {
                   const validItemId = getItemId(item);
                   return (
                     <motion.div
@@ -328,7 +329,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
                   
                   {/* Items grid for larger screens */}
                   <div className="hidden md:grid md:grid-cols-3 gap-4 mb-6">
-                    {activeOutfit.items.map((item, index) => {
+                    {activeOutfit.items.map((item: OutfitItem, index: number) => {
                       const validItemId = getItemId(item);
                       return (
                         <motion.div
@@ -352,7 +353,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ limit, refresh }) => {
                   
                   {/* Items carousel for mobile */}
                   <div className="md:hidden flex gap-4 overflow-x-auto pb-4 snap-x scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-gray-100">
-                    {activeOutfit.items.map((item, index) => {
+                    {activeOutfit.items.map((item: OutfitItem, index: number) => {
                       const validItemId = getItemId(item);
                       return (
                         <motion.div

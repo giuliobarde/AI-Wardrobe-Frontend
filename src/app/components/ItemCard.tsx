@@ -3,7 +3,8 @@
 import React, { useId, useRef, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { checkItemInOutfits } from "../services/wardrobeServices";
-import { useWardrobe, WardrobeItem } from "../context/WardrobeContext";
+import { useWardrobe } from "../context/WardrobeContext";
+import { WardrobeItem } from "../models";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "../hooks/use-outside-click";
