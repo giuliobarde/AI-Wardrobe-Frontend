@@ -191,7 +191,26 @@ const ItemCard: React.FC<ItemCardProps> = ({
       "black": "bg-gray-800 text-white",
       "white": "bg-gray-100 text-gray-800 border border-gray-200",
       "brown": "bg-amber-100 text-amber-800",
-      "orange": "bg-orange-100 text-orange-800"
+      "orange": "bg-orange-100 text-orange-800",
+      "navy": "bg-blue-900 text-white",
+      "dark wash": "bg-blue-900 text-white",
+      "medium wash": "bg-blue-600 text-white",
+      "light wash": "bg-blue-300 text-blue-900",
+      "cream": "bg-amber-50 text-amber-900 border border-amber-200",
+      "beige": "bg-amber-50 text-amber-900 border border-amber-200",
+      "khaki": "bg-amber-100 text-amber-900",
+      "olive": "bg-green-800 text-white",
+      "burgundy": "bg-red-900 text-white",
+      "maroon": "bg-red-900 text-white",
+      "teal": "bg-teal-600 text-white",
+      "mint": "bg-green-100 text-green-800",
+      "lavender": "bg-purple-100 text-purple-800",
+      "coral": "bg-orange-200 text-orange-900",
+      "tan": "bg-amber-100 text-amber-900",
+      "charcoal": "bg-gray-700 text-white",
+      "sage": "bg-green-100 text-green-800",
+      "mustard": "bg-yellow-600 text-white",
+      "camel": "bg-amber-200 text-amber-900"
     };
     
     const colorLower = color.toLowerCase();
