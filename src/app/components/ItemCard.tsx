@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useId, useRef, useState } from "react";
+import React, { useId, useRef, useState, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { checkItemInOutfits } from "../services/wardrobeServices";
 import { useWardrobe } from "../context/WardrobeContext";
@@ -222,6 +222,20 @@ const ItemCard: React.FC<ItemCardProps> = ({
     
     return "bg-gray-100 text-gray-800";
   };
+
+  // Add effect to handle body scroll locking
+  useEffect(() => {
+    if (activeItem) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function to ensure scroll is restored when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [activeItem]);
 
   if (contextLoading || loading) {
     return (
