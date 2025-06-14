@@ -13,6 +13,7 @@ export const addClothingItem = async (item: any, token: string) => {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        timeout: 60000, // 2 minutes timeout for image generation
       }
     );
     return response.data;

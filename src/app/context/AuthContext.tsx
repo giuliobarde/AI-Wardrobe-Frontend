@@ -7,7 +7,7 @@ import { UserData } from "../models";
 import ErrorModal from "../components/ErrorModal";
 
 // Configure axios defaults
-axios.defaults.timeout = 10000; // 10 seconds timeout
+axios.defaults.timeout = 60000; // 60 seconds timeout
 axios.defaults.baseURL = "http://localhost:8000";
 
 // Add response interceptor for better error handling

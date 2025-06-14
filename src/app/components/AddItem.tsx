@@ -255,8 +255,11 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
 
     try {
       setIsSubmitting(true);
+      setShowGeneratingNotice(true);
+      
       // Use addItem from WardrobeContext instead of direct API call
       const newItem = await addItem(payload);
+      
       if (newItem) {
         closeModal();
         onItemAdded();
@@ -265,9 +268,14 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
       }
     } catch (error: any) {
       console.error("Add item error:", error);
-      handleError(error.message || "Failed to add item. Please try again.");
+      if (error.name === 'TimeoutError') {
+        handleError("The request took too long to complete. The item may still be processing in the background. Please check your wardrobe in a few moments.");
+      } else {
+        handleError(error.message || "Failed to add item. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
+      setShowGeneratingNotice(false);
     }
   };
 
@@ -410,7 +418,7 @@ export default function AddItem({ onItemAdded, onError }: AddItemProps) {
                     className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white px-4 py-3 rounded-lg shadow-lg border border-blue-100 flex items-center"
                   >
                     <Loader2 className="w-5 h-5 text-blue-500 mr-3 animate-spin" />
-                    <p className="text-sm">Generating your item image… 😄</p>
+                    <p className="text-sm">Generating your item image… This may take a few moments 😄</p>
                   </motion.div>
                 )}
               </AnimatePresence>
