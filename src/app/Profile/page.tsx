@@ -20,6 +20,7 @@ import {
 import ErrorModal from "@/app/components/ErrorModal";
 import OutfitCard from "../components/OutfitCard";
 import { getSavedOutfits } from "../services/outfitServices";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ClothingItem {
   id: string;
@@ -61,6 +62,8 @@ export default function Profile() {
     favorites: 0,
     styleMatch: 0
   });
+
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   // Animation effect for stats
   useEffect(() => {
@@ -187,15 +190,46 @@ export default function Profile() {
               <div className="flex flex-col md:flex-row items-center mb-4 md:mb-0">
                 {/* Profile Image or Initials */}
                 {user?.profile_image_url && !imageError ? (
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md mb-4 md:mb-0 md:mr-6 relative">
-                    <Image 
-                      src={user.profile_image_url} 
-                      alt={`${user.first_name}'s profile`}
-                      fill
-                      className="object-cover"
-                      onError={handleImageError}
-                    />
-                  </div>
+                  <>
+                    <div
+                      className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md mb-4 md:mb-0 md:mr-6 relative cursor-pointer"
+                      onClick={() => setIsImageModalOpen(true)}
+                    >
+                      <Image 
+                        src={user.profile_image_url} 
+                        alt={`${user.first_name}'s profile`}
+                        fill
+                        className="object-cover"
+                        onError={handleImageError}
+                      />
+                    </div>
+                    <AnimatePresence>
+                      {isImageModalOpen && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+                          onClick={() => setIsImageModalOpen(false)}
+                        >
+                          <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="relative max-w-full max-h-full p-4"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <img
+                              src={user.profile_image_url}
+                              alt={`${user.first_name}'s profile full`}
+                              className="max-h-[80vh] max-w-[90vw] rounded-lg shadow-lg"
+                            />
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
                 ) : (
                   <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 md:mb-0 md:mr-6 border-4 border-white shadow-md">
                     {user?.first_name?.[0]}
