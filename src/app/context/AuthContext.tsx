@@ -5,10 +5,11 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { UserData } from "../models";
 import ErrorModal from "../components/ErrorModal";
+import API_ENDPOINTS from "../config/api";
 
 // Configure axios defaults
 axios.defaults.timeout = 60000; // 60 seconds timeout
-axios.defaults.baseURL = "http://localhost:8000";
+axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
 // Add response interceptor for better error handling
 axios.interceptors.response.use(
