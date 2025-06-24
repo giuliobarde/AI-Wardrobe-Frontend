@@ -21,6 +21,8 @@ import ErrorModal from "@/app/components/ErrorModal";
 import OutfitCard from "../components/OutfitCard";
 import { getSavedOutfits } from "../services/outfitServices";
 import { motion, AnimatePresence } from "framer-motion";
+import { useWeather } from "@/app/context/WeatherContext";
+import { Cloud, CloudRain, CloudSnow, CloudSun, Sun, Wind, Moon, CloudMoon } from "lucide-react";
 
 interface ClothingItem {
   id: string;
@@ -36,6 +38,7 @@ interface Outfit {
 export default function Profile() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const { weatherData } = useWeather();
 
   // ITEMS state
   const [allItems, setAllItems] = useState<ClothingItem[]>([]);
@@ -167,6 +170,29 @@ export default function Profile() {
     setImageError(true);
   };
 
+  // Function to get weather icon (from WeatherDisplay)
+  const getWeatherIcon = (description: string | undefined, isDay: boolean = true) => {
+    if (!description) {
+      return isDay ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-blue-300" />;
+    }
+    const desc = description.toLowerCase();
+    if (desc.includes('rain') || desc.includes('drizzle')) {
+      return <CloudRain className="w-5 h-5 text-blue-400" />;
+    } else if (desc.includes('snow')) {
+      return <CloudSnow className="w-5 h-5 text-blue-300" />;
+    } else if (desc.includes('mist') || desc.includes('fog')) {
+      return <Cloud className="w-5 h-5 text-gray-300" />;
+    } else if (desc.includes('cloud')) {
+      return isDay ? <Cloud className="w-5 h-5 text-gray-400" /> : <CloudMoon className="w-5 h-5 text-gray-400" />;
+    } else if (desc.includes('partly cloudy') || desc.includes('few clouds')) {
+      return isDay ? <CloudSun className="w-5 h-5 text-blue-400" /> : <CloudMoon className="w-5 h-5 text-blue-400" />;
+    } else if (desc.includes('wind')) {
+      return <Wind className="w-5 h-5 text-gray-400 animate-wind" />;
+    } else {
+      return isDay ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-blue-300" />;
+    }
+  };
+
   return (
     <div className="min-h-screen pt-20 pb-16 bg-gradient-to-br from-blue-50 to-purple-50">
       {/* Error Modals */}
@@ -250,7 +276,7 @@ export default function Profile() {
                   </p>
                 </div>
               </div>
-              <div className="flex space-x-3">
+              <div className="flex space-x-3 items-center w-full md:w-auto md:justify-end">
                 <Link
                   href="/Settings"
                   className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition transform hover:scale-105"
@@ -261,6 +287,17 @@ export default function Profile() {
                 <AddItem onItemAdded={loadItems} />
               </div>
             </div>
+            {/* Weather Card (always below header, above stats) */}
+            {weatherData && (
+              <div className="flex justify-center mt-4">
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full px-4 py-1 shadow-sm">
+                  <span>{getWeatherIcon(weatherData.description, true)}</span>
+                  <span className="font-semibold text-gray-700">{Math.round(weatherData.temperature)}°C</span>
+                  <span className="text-gray-500 text-sm capitalize">{weatherData.description}</span>
+                  <span className="text-gray-400 text-xs">{weatherData.location}</span>
+                </div>
+              </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 text-center">
