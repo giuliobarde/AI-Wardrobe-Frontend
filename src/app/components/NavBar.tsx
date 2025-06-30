@@ -38,6 +38,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [logoRotation, setLogoRotation] = useState(0);
+  const logoRef = useRef<HTMLImageElement | null>(null);
   
   // Error modal state
   const [errorModal, setErrorModal] = useState({
@@ -130,6 +132,26 @@ export default function Navbar() {
     }
   };
 
+  // Handle logo mouse movement
+  const handleLogoMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!logoRef.current) return;
+    
+    const rect = logoRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const deltaX = e.clientX - centerX;
+    const deltaY = e.clientY - centerY;
+    
+    // Calculate rotation angle based on mouse position
+    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+    setLogoRotation(angle);
+  };
+
+  const handleLogoMouseLeave = () => {
+    setLogoRotation(0);
+  };
+
   return (
     <>
       <nav
@@ -147,15 +169,18 @@ export default function Navbar() {
               alt="Attirely logo"
               width={46}
               height={46}
-              className="block"
+              className="block transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+              style={{ transform: `rotate(${logoRotation}deg)` }}
+              onMouseMove={handleLogoMouseMove}
+              onMouseLeave={handleLogoMouseLeave}
+              ref={logoRef}
             />
-            <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 group-hover:from-blue-300 group-hover:to-purple-400 transition-all duration-300">
+            <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 group-hover:from-blue-300 group-hover:to-purple-400 transition-all duration-500 group-hover:scale-105 group-hover:drop-shadow-[0_0_15px_rgba(147,51,234,0.3)] relative">
               Attirely
+              <span className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-500">
+                Attirely
+              </span>
             </span>
-            <span
-              className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-500 transition-all duration-300 group-hover:w-full"
-              aria-hidden="true"
-            />
           </Link>
 
           {/* Nav Links - Desktop */}
