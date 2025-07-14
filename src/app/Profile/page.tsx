@@ -438,7 +438,7 @@ export default function Profile() {
               className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
             >
               View All
-              <ChevronRight size={16} className="ml-1" />
+              <ChevronRight size={16} className="ml-1"/>
             </Link>
           </div>
 
