@@ -25,4 +25,3 @@ export async function generateChatOutfit(
     const data = await response.json();
     return data;
   }
-  
